@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Textile Bazar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .qr-preview {
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+        
+        .qr-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .qr-code-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .qr-code-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+        
+        .qr-code-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .qr-code-info {
+            flex: 1;
+        }
+        
+        .qr-code-info h5 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .qr-code-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .qr-code-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .qr-code-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            margin-right: 5px;
+            font-weight: 500;
+        }
+        
+        .badge-upi { background-color: #0066CC; color: white; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h4 {
+            margin: 0;
+            color: #0066CC;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #0066CC;
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.1);
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-small i {
+            font-size: 10px;
+        }
+        
+        .btn-primary-small {
+            background-color: #0066CC;
+            color: white;
+        }
+        
+        .btn-primary-small:hover {
+            background-color: #0052a3;
+        }
+        
+        .btn-success-small {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success-small:hover {
+            background-color: #218838;
+        }
+        
+        .btn-danger-small {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger-small:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-warning-small {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning-small:hover {
+            background-color: #e0a800;
+        }
+        
+        .qr-codes-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header h4 {
+            margin: 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .no-qr-codes {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .no-qr-codes i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .active-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .active-indicator.active {
+            background-color: #28a745;
+        }
+        
+        .active-indicator.inactive {
+            background-color: #dc3545;
+        }
+        
+        .default-badge {
+            background-color: #0066CC;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #0066CC;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: rgba(0,102,204,0.05);
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background: rgba(0,102,204,0.1);
+        }
+        
+        .upload-area input[type="file"] {
+            display: none;
+        }
+        
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .upload-label i {
+            font-size: 36px;
+            color: #0066CC;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        /* Payment History Styles */
+        .payment-history-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .payment-history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .payment-history-table th {
+            background-color: #0066CC;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .payment-history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .payment-history-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .payment-history-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .payment-method-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .payment-method-icon i {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .no-payments {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: white;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .no-payments i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .payment-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h5 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .stat-card .amount {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0066CC;
+        }
+        
+        .stat-card .change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .stat-card .change.positive {
+            color: #28a745;
+        }
+        
+        .stat-card .change.negative {
+            color: #dc3545;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .qr-code-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .qr-code-actions {
+                margin-top: 10px;
+            }
+            
+            .payment-history-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .payment-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Profile Header Styles */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .avatar {
+            font-size: 60px;
+            color: #0066CC;
+            margin-right: 20px;
+        }
+
+        .profile-title h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .role-badge {
+            background-color: #0066CC;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .profile-details {
+            margin-bottom: 30px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .detail-label i {
+            margin-right: 8px;
+            color: #0066CC;
+            width: 20px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .active-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .inactive-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid #0066CC;
+            color: #0066CC;
+        }
+
+        .btn-outline:hover {
+            background-color: #0066CC;
+            color: white;
+        }
+
+        .logout-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #dc3545;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px;
+            border: 1px solid #dc3545;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .logout-link:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        /* Additional styles for payment section */
+        .action-buttons {
+            margin-top: 10px;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mt-3 {
+            margin-top: 15px;
+        }
+        
+        .text-muted {
+            color: #666;
+        }
+        
+        .amount {
+            font-weight: 600;
+            color: #0066CC;
+        }
+
+        /* Payment method badges */
+        .method-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .method-cash {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .method-upi {
+            background-color: #0066CC;
+            color: white;
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fas fa-tshirt"></i>
+                    <h1>My Profile</h1>
+                </div>
+                <p class="subtitle">Textile Bazar Account Information</p>
+            </div>
+
+            <!-- Profile Information -->
+            <div class="profile-info">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="profile-header">
+                    <div class="avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="profile-title">
+                        <h3>{{ user.full_name }}</h3>
+                        <span class="badge role-badge">{{ user.role|capitalize }}</span>
+                    </div>
+                </div>
+
+                <div class="profile-details">
+                    <div class="detail-row">
+                        <div class="detail-label">
+                            <i class="fas fa-user"></i> Username
+                        </div>
+                        <div class="detail-value">{{ user.username }}</div>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-label">
+                            <i class="fas fa-envelope"></i> Email
+                        </div>
+                        <div class="detail-value">{{ user.email }}</div>
+                    </div>
+
+                    {% if user.phone %}
+                    <div class="detail-row">
+                        <div class="detail-label">
+                            <i class="fas fa-phone"></i> Phone
+                        </div>
+                        <div class="detail-value">{{ user.phone }}</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="detail-row">
+                        <div class="detail-label">
+                            <i class="fas fa-calendar-alt"></i> Member Since
+                        </div>
+                        <div class="detail-value">
+                            {{ user.created_at[:10] }}
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-label">
+                            <i class="fas fa-clock"></i> Last Login
+                        </div>
+                        <div class="detail-value">
+                            {% if user.last_login %}
+                                {{ user.last_login[:19] }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="detail-row">
+                        <div class="detail-label">
+                            <i class="fas fa-user-check"></i> Account Status
+                        </div>
+                        <div class="detail-value">
+                            {% if user.is_active %}
+                                <span class="badge active-badge">Active</span>
+                            {% else %}
+                                <span class="badge inactive-badge">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment QR Codes Section -->
+            <div class="qr-codes-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-qrcode"></i> UPI QR Codes</h4>
+                    <button class="btn btn-primary" onclick="openAddQRModal()">
+                        <i class="fas fa-plus"></i> Add QR Code
+                    </button>
+                </div>
+                
+                {% if qr_codes %}
+                    <div class="qr-codes-list">
+                        {% for qr in qr_codes %}
+                        <div class="qr-code-item">
+                            <div class="qr-code-image">
+                                {% if qr.qr_url %}
+                                    <img src="{{ qr.qr_url }}" alt="{{ qr.display_name }}">
+                                {% else %}
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
+                                        <i class="fas fa-qrcode" style="font-size: 24px; color: #999;"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="qr-code-info">
+                                <h5>{{ qr.display_name }}</h5>
+                                <p>
+                                    <span class="qr-code-badge badge-upi">
+                                        UPI
+                                    </span>
+                                    <span class="active-indicator {% if qr.is_active %}active{% else %}inactive{% endif %}"></span>
+                                    {{ 'Active' if qr.is_active else 'Inactive' }}
+                                    {% if user.default_qr_id == qr.id %}
+                                        <span class="default-badge">Default</span>
+                                    {% endif %}
+                                </p>
+                                {% if qr.upi_id %}
+                                <p style="margin-top: 5px;">
+                                    <small><i class="fas fa-wallet"></i> {{ qr.upi_id }}</small>
+                                </p>
+                                {% endif %}
+                                <p style="margin-top: 5px;">
+                                    <small><i class="far fa-calendar"></i> Added: {{ qr.created_at[:10] }}</small>
+                                </p>
+                            </div>
+                            <div class="qr-code-actions">
+                                {% if user.default_qr_id != qr.id %}
+                                <button class="btn-small btn-primary-small" 
+                                        onclick="setDefaultQR('{{ qr.id }}')"
+                                        title="Set as Default">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                                {% endif %}
+                                
+                                <button class="btn-small {% if qr.is_active %}btn-warning-small{% else %}btn-success-small{% endif %}"
+                                        onclick="toggleQRStatus('{{ qr.id }}')"
+                                        title="{{ 'Deactivate' if qr.is_active else 'Activate' }}">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                                
+                                <button class="btn-small btn-danger-small" 
+                                        onclick="deleteQR('{{ qr.id }}')"
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-qr-codes">
+                        <i class="fas fa-qrcode"></i>
+                        <h5>No QR Codes Added</h5>
+                        <p>Add your UPI payment QR codes to accept UPI payments</p>
+                        <button class="btn btn-primary" onclick="openAddQRModal()">
+                            <i class="fas fa-plus"></i> Add Your First QR Code
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Payment History Section -->
+            <div class="payment-history-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-history"></i> Recent Payments</h4>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('payments_history') }}" class="btn btn-primary">
+                            <i class="fas fa-list"></i> View All Payments
+                        </a>
+                        <a href="{{ url_for('add_payment') }}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Record Payment
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Payment Statistics -->
+                {% if payment_stats %}
+                <div class="payment-stats">
+                    <div class="stat-card">
+                        <h5>Total Received</h5>
+                        <div class="amount">{{ payment_stats.total_received|format_rupees }}</div>
+                        <div class="change positive">
+                            <i class="fas fa-arrow-up"></i> {{ payment_stats.success_rate|round(1) }}% success rate
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Pending Payments</h5>
+                        <div class="amount">{{ payment_stats.pending_amount|format_rupees }}</div>
+                        <div class="change">
+                            {{ payment_stats.pending_count }} payments
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Total Transactions</h5>
+                        <div class="amount">{{ payment_stats.total_transactions }}</div>
+                        <div class="change">
+                            {{ payment_stats.completed_count }} completed
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Failed Payments</h5>
+                        <div class="amount">{{ payment_stats.failed_amount|format_rupees }}</div>
+                        <div class="change negative">
+                            {{ payment_stats.failed_count }} payments
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Recent Payments Table -->
+                {% if recent_payments %}
+                <div class="table-responsive">
+                    <table class="payment-history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in recent_payments %}
+                            <tr>
+                                <td>{{ payment.created_at[:10] }}</td>
+                                <td>
+                                    <strong>{{ payment.customer_name }}</strong><br>
+                                    <small class="text-muted">{{ payment.customer_phone }}</small>
+                                </td>
+                                <td class="amount">{{ payment.amount|format_rupees }}</td>
+                                <td>
+                                    {% if payment.payment_method == 'cash' %}
+                                    <span class="method-badge method-cash">
+                                        <i class="fas fa-money-bill-wave"></i> Cash
+                                    </span>
+                                    {% else %}
+                                    <span class="method-badge method-upi">
+                                        <i class="fas fa-qrcode"></i> UPI
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ payment.status }}">
+                                        {{ payment.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('view_payment', id=payment.id) }}" 
+                                       class="btn-small btn-primary-small" 
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="no-payments">
+                    <i class="fas fa-receipt"></i>
+                    <h5>No Payment History</h5>
+                    <p>Start recording payments to track your transactions</p>
+                    <a href="{{ url_for('add_payment') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Record First Payment
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Show View All button if there are recent payments -->
+                {% if recent_payments and recent_payments|length > 0 %}
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('payments_history') }}" class="btn btn-outline">
+                        <i class="fas fa-arrow-right"></i> View All Payments
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{{ url_for('auth_change_password') }}" class="btn btn-primary">
+                    <i class="fas fa-key"></i> Change Password
+                </a>
+                <a href="{{ url_for('payments_qr_codes') }}" class="btn btn-primary">
+                    <i class="fas fa-qrcode"></i> Manage QR Codes
+                </a>
+                <a href="{{ url_for('payments_history') }}" class="btn btn-primary">
+                    <i class="fas fa-history"></i> Payment History
+                </a>
+                <a href="{{ url_for('home') }}" class="btn btn-outline">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+
+            <!-- Footer Links -->
+            <div class="auth-links">
+                <a href="{{ url_for('auth_logout') }}" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add QR Code Modal -->
+    <div id="addQRModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4><i class="fas fa-qrcode"></i> Add UPI QR Code</h4>
+                <button class="close-modal" onclick="closeAddQRModal()">&times;</button>
+            </div>
+            <form action="{{ url_for('payments_qr_codes') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="upload">
+                
+                <div class="form-group">
+                    <label for="qr_type">Payment Type *</label>
+                    <select class="form-control" id="qr_type" name="qr_type" required>
+                        <option value="upi">UPI</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="display_name">Display Name *</label>
+                    <input type="text" class="form-control" id="display_name" name="display_name" 
+                           placeholder="e.g., Business UPI QR, Main Account QR" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="upi_id">UPI ID (Optional)</label>
+                        <input type="text" class="form-control" id="upi_id" name="upi_id" 
+                               placeholder="username@upi">
+                        <small style="color: #666;">If you enter UPI ID, we can generate QR code automatically</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>QR Code Image (Optional)</label>
+                    <div class="upload-area">
+                        <label class="upload-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Click to upload QR code image</span>
+                            <span style="font-size: 12px; color: #666;">PNG, JPG, JPEG (Max 5MB)</span>
+                            <input type="file" id="qr_image" name="qr_image" accept=".png,.jpg,.jpeg,.gif">
+                        </label>
+                    </div>
+                    <div class="qr-preview" id="qrPreview">
+                        <div style="color: #999;">
+                            <i class="fas fa-image" style="font-size: 36px;"></i>
+                            <p style="margin-top: 10px;">Preview will appear here</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> Save QR Code
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="closeAddQRModal()" style="flex: 1;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal functions
+        function openAddQRModal() {
+            document.getElementById('addQRModal').style.display = 'block';
+        }
+        
+        function closeAddQRModal() {
+            document.getElementById('addQRModal').style.display = 'none';
+            document.getElementById('qrPreview').innerHTML = `
+                <div style="color: #999;">
+                    <i class="fas fa-image" style="font-size: 36px;"></i>
+                    <p style="margin-top: 10px;">Preview will appear here</p>
+                </div>`;
+            document.getElementById('qr_image').value = '';
+        }
+        
+        // QR Code preview
+        document.getElementById('qr_image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('qrPreview');
+            
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="QR Code Preview">`;
+                }
+                
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Set default QR code
+        function setDefaultQR(qrId) {
+            if (confirm('Set this as your default QR code?')) {
+                window.location.href = "{{ url_for('set_default_qr_code', qr_id=0) }}".replace('0', qrId);
+            }
+        }
+        
+        // Toggle QR code status
+        function toggleQRStatus(qrId) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('payments_qr_codes') }}";
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'toggle';
+            form.appendChild(actionInput);
+            
+            const qrIdInput = document.createElement('input');
+            qrIdInput.type = 'hidden';
+            qrIdInput.name = 'qr_id';
+            qrIdInput.value = qrId;
+            form.appendChild(qrIdInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        // Delete QR code
+        function deleteQR(qrId) {
+            if (confirm('Are you sure you want to delete this QR code?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('payments_qr_codes') }}";
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete';
+                form.appendChild(actionInput);
+                
+                const qrIdInput = document.createElement('input');
+                qrIdInput.type = 'hidden';
+                qrIdInput.name = 'qr_id';
+                qrIdInput.value = qrId;
+                form.appendChild(qrIdInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('addQRModal');
+            if (event.target == modal) {
+                closeAddQRModal();
+            }
+        }
+    </script>
+</body>
+</html>

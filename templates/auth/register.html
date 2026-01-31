@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Textile Bazar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fas fa-tshirt"></i>
+                    <h1>Create Account</h1>
+                </div>
+                <p class="subtitle">Join Textile Bazar Management System</p>
+            </div>
+
+            <!-- Registration Form -->
+            <form method="POST" class="auth-form" onsubmit="return validateForm()">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="full_name">
+                            <i class="fas fa-user-circle"></i> Full Name *
+                        </label>
+                        <input type="text" id="full_name" name="full_name" required
+                               placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">
+                            <i class="fas fa-phone"></i> Phone (Optional)
+                        </label>
+                        <input type="tel" id="phone" name="phone"
+                               placeholder="Enter 10-digit phone number">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Username *
+                    </label>
+                    <input type="text" id="username" name="username" required
+                           placeholder="Choose a username">
+                    <small class="form-text">Only letters, numbers, and underscores</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i> Email *
+                    </label>
+                    <input type="email" id="email" name="email" required
+                           placeholder="Enter your email">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Password *
+                        </label>
+                        <div class="password-input">
+                            <input type="password" id="password" name="password" required
+                                   placeholder="Create password">
+                            <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="password-strength">
+                            <div class="strength-bar"></div>
+                            <small>Password strength: <span id="strength-text">Weak</span></small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">
+                            <i class="fas fa-lock"></i> Confirm Password *
+                        </label>
+                        <div class="password-input">
+                            <input type="password" id="confirm_password" name="confirm_password" required
+                                   placeholder="Confirm password">
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirm_password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <small class="form-text" id="password-match"></small>
+                    </div>
+                </div>
+
+                <div class="password-requirements">
+                    <h5><i class="fas fa-shield-alt"></i> Password Requirements:</h5>
+                    <ul>
+                        <li id="req-length">✓ At least 8 characters</li>
+                        <li id="req-uppercase">✓ One uppercase letter</li>
+                        <li id="req-lowercase">✓ One lowercase letter</li>
+                        <li id="req-number">✓ One number</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+
+            <!-- Links -->
+            <div class="auth-links">
+                <p>Already have an account?
+                <a href="{{ url_for('auth_login') }}">Login here</a>
+                </p>
+                <p>Or go back to
+                    <a href="{{ url_for('home') }}">Home</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.parentElement.querySelector('i');
+
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+
+            // Length check
+            if (password.length >= 8) strength++;
+
+            // Uppercase check
+            if (/[A-Z]/.test(password)) strength++;
+
+            // Lowercase check
+            if (/[a-z]/.test(password)) strength++;
+
+            // Number check
+            if (/[0-9]/.test(password)) strength++;
+
+            return strength;
+        }
+
+        function updatePasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strength = checkPasswordStrength(password);
+            const strengthBar = document.querySelector('.strength-bar');
+            const strengthText = document.getElementById('strength-text');
+
+            // Update requirements
+            document.getElementById('req-length').style.color = password.length >= 8 ? '#28a745' : '#dc3545';
+            document.getElementById('req-uppercase').style.color = /[A-Z]/.test(password) ? '#28a745' : '#dc3545';
+            document.getElementById('req-lowercase').style.color = /[a-z]/.test(password) ? '#28a745' : '#dc3545';
+            document.getElementById('req-number').style.color = /[0-9]/.test(password) ? '#28a745' : '#dc3545';
+
+            // Update strength bar
+            const width = (strength / 4) * 100;
+            strengthBar.style.width = width + '%';
+
+            // Update strength text and color
+            if (strength === 0) {
+                strengthBar.style.backgroundColor = '#dc3545';
+                strengthText.textContent = 'Weak';
+            } else if (strength <= 2) {
+                strengthBar.style.backgroundColor = '#ffc107';
+                strengthText.textContent = 'Fair';
+            } else if (strength === 3) {
+                strengthBar.style.backgroundColor = '#28a745';
+                strengthText.textContent = 'Good';
+            } else {
+                strengthBar.style.backgroundColor = '#0066CC';
+                strengthText.textContent = 'Strong';
+            }
+        }
+
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const matchText = document.getElementById('password-match');
+
+            if (!confirm) {
+                matchText.textContent = '';
+                matchText.style.color = '';
+                return;
+            }
+
+            if (password === confirm) {
+                matchText.textContent = '✓ Passwords match';
+                matchText.style.color = '#28a745';
+            } else {
+                matchText.textContent = '✗ Passwords do not match';
+                matchText.style.color = '#dc3545';
+            }
+        }
+
+        function validateForm() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const strength = checkPasswordStrength(password);
+
+            if (strength < 3) {
+                alert('Please choose a stronger password');
+                return false;
+            }
+
+            if (password !== confirm) {
+                alert('Passwords do not match');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Event listeners
+        document.getElementById('password').addEventListener('input', function() {
+            updatePasswordStrength();
+            checkPasswordMatch();
+        });
+
+        document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+    </script>
+</body>
+</html>
