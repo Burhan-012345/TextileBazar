@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit QR Payment - Textile Bazar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 102, 204, 0.1);
+            overflow: hidden;
+            border: 1px solid #e6f2ff;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #0066CC 0%, #3399FF 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            animation: float 20s linear infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-20px, -20px) rotate(360deg); }
+        }
+        
+        .card-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .card-header p {
+            opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .card-body {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #0066CC;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #fafcff;
+            color: #333;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #0066CC;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            max-width: 300px;
+        }
+        
+        .payment-method {
+            position: relative;
+        }
+        
+        .payment-method input {
+            display: none;
+        }
+        
+        .payment-method label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+        
+        .payment-method label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 102, 204, 0.1);
+            border-color: #0066CC;
+        }
+        
+        .payment-method input:checked + label {
+            border-color: #0066CC;
+            background: rgba(0, 102, 204, 0.05);
+            color: #0066CC;
+        }
+        
+        .payment-method i {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .payment-method span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .amount-input {
+            position: relative;
+        }
+        
+        .amount-input span {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            font-weight: bold;
+            color: #0066CC;
+        }
+        
+        .amount-input .form-control {
+            padding-left: 45px;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0066CC 0%, #3399FF 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0052a3 0%, #0066CC 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f8ff;
+            color: #0066CC;
+            border: 2px solid #cce5ff;
+        }
+        
+        .btn-secondary:hover {
+            background: #e6f2ff;
+            color: #0052a3;
+            border-color: #99d6ff;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 25px;
+        }
+        
+        .back-link a {
+            color: #0066CC;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .back-link a:hover {
+            gap: 12px;
+            background: rgba(0, 102, 204, 0.05);
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .alert-success {
+            background: #e6f7ee;
+            color: #006633;
+            border: 1px solid #b3e6cc;
+        }
+        
+        .alert-danger {
+            background: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #ffb3b3;
+        }
+        
+        .alert i {
+            font-size: 20px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 10px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .transaction-info {
+            background: #f0f8ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #cce5ff;
+        }
+        
+        .transaction-info h3 {
+            color: #0066CC;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            padding: 10px;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card-header {
+                padding: 25px 20px;
+            }
+            
+            .card-header h1 {
+                font-size: 24px;
+            }
+            
+            .card-body {
+                padding: 30px 20px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* QR Preview Styling */
+        .qr-preview-container {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f2ff 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px dashed #99d6ff;
+            text-align: center;
+        }
+        
+        .qr-preview-container h3 {
+            color: #0066CC;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .qr-code-display {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 102, 204, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e6f2ff;
+        }
+        
+        .qr-placeholder {
+            text-align: center;
+            color: #666;
+        }
+        
+        .qr-placeholder i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #99d6ff;
+        }
+        
+        .qr-placeholder p {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>
+                    <i class="fas fa-edit"></i>
+                    Edit Payment
+                </h1>
+                <p>Update payment details and status</p>
+            </div>
+            
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Transaction Information -->
+                <div class="transaction-info">
+                    <h3><i class="fas fa-info-circle"></i> Payment Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Transaction ID</div>
+                            <div class="info-value">{{ qr_payment.transaction_id }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Created On</div>
+                            <div class="info-value">{{ qr_payment.created_at[:10] }} {{ qr_payment.created_at[11:16] }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Current Status</div>
+                            <div class="info-value">
+                                <span class="status-badge status-{{ qr_payment.status }}">{{ qr_payment.status|title }}</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Linked Bill</div>
+                            <div class="info-value">
+                                {% if qr_payment.bill_id %}
+                                    #{{ qr_payment.bill_id }}
+                                {% else %}
+                                    Not Linked
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CHANGED: Form action to use edit_qr_payment endpoint which handles POST -->
+                <form method="POST" action="{{ url_for('edit_qr_payment', id=qr_payment.id) }}">
+                    <div class="form-group">
+                        <label for="customer_name">
+                            <i class="fas fa-user"></i> Customer Name
+                        </label>
+                        <input type="text" 
+                               id="customer_name" 
+                               name="customer_name" 
+                               class="form-control" 
+                               placeholder="Enter customer name"
+                               value="{{ qr_payment.customer_name }}"
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customer_phone">
+                            <i class="fas fa-phone"></i> Customer Phone
+                        </label>
+                        <input type="tel" 
+                               id="customer_phone" 
+                               name="customer_phone" 
+                               class="form-control" 
+                               placeholder="10-digit mobile number"
+                               pattern="[6-9][0-9]{9}"
+                               value="{{ qr_payment.customer_phone }}"
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">
+                            <i class="fas fa-rupee-sign"></i> Payment Amount
+                        </label>
+                        <div class="amount-input">
+                            <span>₹</span>
+                            <input type="number" 
+                                   id="amount" 
+                                   name="amount" 
+                                   class="form-control" 
+                                   placeholder="0.00" 
+                                   min="1" 
+                                   step="0.01" 
+                                   value="{{ qr_payment.amount }}"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <!-- Updated Payment Method - Only Cash and UPI -->
+                    <div class="form-group">
+                        <label><i class="fas fa-credit-card"></i> Payment Method</label>
+                        <div class="payment-methods">
+                            <div class="payment-method">
+                                <input type="radio" 
+                                       id="method_cash" 
+                                       name="payment_method" 
+                                       value="cash"
+                                       {% if qr_payment.payment_method == 'cash' %}checked{% endif %}>
+                                <label for="method_cash">
+                                    <i class="fas fa-money-bill-wave" style="color: #28a745;"></i>
+                                    <span>Cash</span>
+                                </label>
+                            </div>
+                            
+                            <div class="payment-method">
+                                <input type="radio" 
+                                       id="method_upi" 
+                                       name="payment_method" 
+                                       value="upi"
+                                       {% if qr_payment.payment_method == 'upi' %}checked{% endif %}>
+                                <label for="method_upi">
+                                    <i class="fas fa-qrcode" style="color: #0066CC;"></i>
+                                    <span>UPI</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">
+                            <i class="fas fa-check-circle"></i> Payment Status
+                        </label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="pending" {% if qr_payment.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="completed" {% if qr_payment.status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="failed" {% if qr_payment.status == 'failed' %}selected{% endif %}>Failed</option>
+                        </select>
+                    </div>
+                    
+                    <!-- QR Code Selection (Only shown for UPI payments) -->
+                    <div class="form-group" id="qrCodeSection" style="display: {% if qr_payment.payment_method == 'upi' %}block{% else %}none{% endif %};">
+                        <label for="qr_code_id">
+                            <i class="fas fa-qrcode"></i> QR Code (Optional)
+                        </label>
+                        <select id="qr_code_id" name="qr_code_id" class="form-control">
+                            <option value="">-- Select QR Code --</option>
+                            {% for qr in qr_codes %}
+                            <option value="{{ qr.id }}" {% if qr_payment.qr_code_id == qr.id %}selected{% endif %}>
+                                {{ qr.display_name }} (UPI)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bill_id">
+                            <i class="fas fa-receipt"></i> Link to Bill (Optional)
+                        </label>
+                        <select id="bill_id" name="bill_id" class="form-control">
+                            <option value="">-- Select Bill --</option>
+                            {% for bill in recent_bills %}
+                            <option value="{{ bill.id }}" {% if qr_payment.bill_id == bill.id %}selected{% endif %}>
+                                #{{ bill.id }} - {{ bill.customer_name }} ({{ bill.date }}) - ₹{{ "%.2f"|format(bill.total) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">
+                            <i class="fas fa-sticky-note"></i> Notes (Optional)
+                        </label>
+                        <textarea id="notes" 
+                                  name="notes" 
+                                  class="form-control" 
+                                  placeholder="Add any additional notes about this payment..."
+                                  rows="3">{{ qr_payment.notes or '' }}</textarea>
+                    </div>
+                    
+                    <!-- QR Code Preview (Only for UPI) -->
+                    {% if qr_payment.payment_method == 'upi' and qr_payment.qr_code_id %}
+                    <div class="qr-preview-container">
+                        <h3><i class="fas fa-qrcode"></i> Payment QR Code</h3>
+                        <div class="qr-code-display" id="qrPreview">
+                            {% if qr_payment.qr_code_name %}
+                            <div style="text-align: center;">
+                                <div style="width: 150px; height: 150px; background: #f0f0f0; border-radius: 8px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+                                    <div style="width: 130px; height: 130px; background: white; border-radius: 5px; position: relative;">
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                            <i class="fas fa-qrcode" style="font-size: 40px; color: #0066CC;"></i>
+                                            <div style="margin-top: 5px; font-size: 12px; color: #666;">{{ qr_payment.qr_code_name }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="font-weight: bold; color: #0066CC; font-size: 18px;">₹{{ "%.2f"|format(qr_payment.amount) }}</div>
+                                <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                                    UPI Payment
+                                    {% if qr_payment.notes %}<br><small>{{ qr_payment.notes[:30] }}{% if qr_payment.notes|length > 30 %}...{% endif %}</small>{% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="qr-placeholder">
+                                <i class="fas fa-qrcode"></i>
+                                <p>No QR code linked</p>
+                                <p style="font-size: 12px;">This payment doesn't have a QR code</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Payment
+                        </button>
+                        <!-- CHANGED: Cancel button URL to payments_history -->
+                        <a href="{{ url_for('payments_history') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+                
+                <div class="back-link">
+                    <!-- CHANGED: Back link to payments_history -->
+                    <a href="{{ url_for('payments_history') }}">
+                        <i class="fas fa-arrow-left"></i> Back to Payment History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Format amount on blur
+        document.getElementById('amount').addEventListener('blur', function(e) {
+            if (this.value) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        });
+        
+        // Show/hide QR code section based on payment method
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const qrSection = document.getElementById('qrCodeSection');
+                if (this.value === 'upi') {
+                    qrSection.style.display = 'block';
+                } else {
+                    qrSection.style.display = 'none';
+                }
+            });
+        });
+        
+        // Update QR preview when amount changes
+        document.getElementById('amount').addEventListener('input', function(e) {
+            updateQRPreview();
+        });
+        
+        // Update QR preview when payment method changes
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', updateQRPreview);
+        });
+        
+        function updateQRPreview() {
+            const amount = document.getElementById('amount').value;
+            const method = document.querySelector('input[name="payment_method"]:checked')?.value || 'cash';
+            const qrPreview = document.getElementById('qrPreview');
+            
+            if (!qrPreview || method !== 'upi') {
+                return;
+            }
+            
+            if (qrPreview.querySelector('.qr-placeholder')) {
+                return;
+            }
+            
+            if (amount) {
+                const amountDisplay = qrPreview.querySelector('div[style*="font-weight: bold"]');
+                if (amountDisplay) {
+                    amountDisplay.textContent = `₹${parseFloat(amount).toFixed(2)}`;
+                }
+            }
+        }
+        
+        // Update QR preview when QR code selection changes
+        document.getElementById('qr_code_id').addEventListener('change', function(e) {
+            const qrPreview = document.getElementById('qrPreview');
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (!qrPreview) {
+                return;
+            }
+            
+            if (this.value && selectedOption.text) {
+                // Show the selected QR code
+                const qrCodeName = selectedOption.text.split('(')[0].trim();
+                qrPreview.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="width: 150px; height: 150px; background: #f0f0f0; border-radius: 8px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 130px; height: 130px; background: white; border-radius: 5px; position: relative;">
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <i class="fas fa-qrcode" style="font-size: 40px; color: #0066CC;"></i>
+                                    <div style="margin-top: 5px; font-size: 12px; color: #666;">${qrCodeName}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-weight: bold; color: #0066CC; font-size: 18px;">₹${document.getElementById('amount').value || '0.00'}</div>
+                        <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                            UPI Payment
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Show placeholder
+                qrPreview.innerHTML = `
+                    <div class="qr-placeholder">
+                        <i class="fas fa-qrcode"></i>
+                        <p>No QR code linked</p>
+                        <p style="font-size: 12px;">This payment doesn't have a QR code</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Auto-focus first field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('customer_name').focus();
+        });
+    </script>
+</body>
+</html>

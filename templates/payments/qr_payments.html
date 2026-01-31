@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create QR Payment - Textile Bazar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* QR Payment Create Page Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.6s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .card-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .card-header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .card-body {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #0066CC;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .payment-method {
+            position: relative;
+        }
+        
+        .payment-method input {
+            display: none;
+        }
+        
+        .payment-method label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .payment-method label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .payment-method input:checked + label {
+            border-color: #0066CC;
+            background: rgba(0, 102, 204, 0.05);
+            color: #0066CC;
+        }
+        
+        .payment-method i {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .payment-method span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .qr-preview-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px dashed #0066CC;
+        }
+        
+        .qr-preview {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ddd;
+        }
+        
+        .qr-preview i {
+            font-size: 60px;
+            color: #0066CC;
+        }
+        
+        .qr-placeholder {
+            text-align: center;
+            color: #666;
+        }
+        
+        .qr-placeholder i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+        
+        .qr-placeholder p {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 102, 204, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+        
+        .amount-input {
+            position: relative;
+        }
+        
+        .amount-input span {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            font-weight: bold;
+            color: #0066CC;
+        }
+        
+        .amount-input .form-control {
+            padding-left: 45px;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert i {
+            font-size: 20px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 25px;
+        }
+        
+        .back-link a {
+            color: #0066CC;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .back-link a:hover {
+            gap: 12px;
+            color: #004C99;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card-header {
+                padding: 25px 20px;
+            }
+            
+            .card-header h1 {
+                font-size: 24px;
+            }
+            
+            .card-body {
+                padding: 30px 20px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .qr-preview {
+                width: 180px;
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>
+                    <i class="fas fa-qrcode"></i>
+                    Create Payment
+                </h1>
+                <p>Generate payment for customers</p>
+            </div>
+            
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+<form method="POST" action="{{ url_for('update_qr_payment', id=qr_payment.id) }}">
+                    <div class="form-group">
+                        <label for="amount"><i class="fas fa-rupee-sign"></i> Payment Amount</label>
+                        <div class="amount-input">
+                            <span>₹</span>
+                            <input type="number" 
+                                   id="amount" 
+                                   name="amount" 
+                                   class="form-control" 
+                                   placeholder="0.00" 
+                                   min="1" 
+                                   step="0.01" 
+                                   required
+                                   value="{{ request.form.get('amount', '') }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Updated Payment Method - Only Cash and UPI -->
+                    <div class="form-group">
+                        <label><i class="fas fa-credit-card"></i> Payment Method</label>
+                        <div class="payment-methods">
+                            <div class="payment-method">
+                                <input type="radio" id="method_cash" name="payment_method" value="cash" checked>
+                                <label for="method_cash">
+                                    <i class="fas fa-money-bill-wave" style="color: #28a745;"></i>
+                                    <span>Cash</span>
+                                </label>
+                            </div>
+                            
+                            <div class="payment-method">
+                                <input type="radio" id="method_upi" name="payment_method" value="upi">
+                                <label for="method_upi">
+                                    <i class="fas fa-qrcode" style="color: #0066CC;"></i>
+                                    <span>UPI</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-file-alt"></i> Payment Description (Optional)</label>
+                        <input type="text" 
+                               id="description" 
+                               name="description" 
+                               class="form-control" 
+                               placeholder="e.g., Payment for order #1234"
+                               value="{{ request.form.get('description', '') }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customer_phone"><i class="fas fa-phone"></i> Customer Phone (Optional)</label>
+                        <input type="tel" 
+                               id="customer_phone" 
+                               name="customer_phone" 
+                               class="form-control" 
+                               placeholder="10-digit mobile number"
+                               pattern="[6-9][0-9]{9}"
+                               value="{{ request.form.get('customer_phone', '') }}">
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                            Add customer phone to link payment with their account
+                        </small>
+                    </div>
+                    
+                    <!-- QR Preview (Only for UPI) -->
+                    <div class="qr-preview-container" id="qrPreviewContainer" style="display: none;">
+                        <h3 style="margin-bottom: 15px; color: #0066CC;">
+                            <i class="fas fa-qrcode"></i> QR Preview
+                        </h3>
+                        <div class="qr-preview" id="qrPreview">
+                            <div class="qr-placeholder">
+                                <i class="fas fa-qrcode"></i>
+                                <p>QR code will appear here</p>
+                                <p style="font-size: 12px;">After entering amount and selecting UPI</p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button type="button" class="btn btn-secondary" onclick="generatePreview()" style="padding: 10px 20px;">
+                                <i class="fas fa-sync-alt"></i> Generate Preview
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle"></i> Create Payment
+                        </button>
+                        <a href="{{ url_for('qr_payments_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+                
+                <div class="back-link">
+                    <a href="{{ url_for('qr_payments_list') }}">
+                        <i class="fas fa-arrow-left"></i> Back to Payments List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide QR preview based on payment method
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const qrContainer = document.getElementById('qrPreviewContainer');
+                if (this.value === 'upi') {
+                    qrContainer.style.display = 'block';
+                } else {
+                    qrContainer.style.display = 'none';
+                }
+            });
+        });
+        
+        // Generate QR preview (Only for UPI)
+        function generatePreview() {
+            const amount = document.getElementById('amount').value;
+            const method = document.querySelector('input[name="payment_method"]:checked').value;
+            const description = document.getElementById('description').value;
+            
+            if (!amount) {
+                alert('Please enter an amount first');
+                return;
+            }
+            
+            if (method !== 'upi') {
+                return;
+            }
+            
+            const qrPreview = document.getElementById('qrPreview');
+            qrPreview.innerHTML = `
+                <div style="padding: 20px; text-align: center;">
+                    <div style="width: 150px; height: 150px; background: #f0f0f0; border-radius: 8px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 130px; height: 130px; background: white; border-radius: 5px; position: relative;">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                <i class="fas fa-qrcode" style="font-size: 40px; color: #0066CC;"></i>
+                                <div style="margin-top: 5px; font-size: 12px; color: #666;">Demo QR</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-weight: bold; color: #0066CC; font-size: 18px;">₹${parseFloat(amount).toFixed(2)}</div>
+                    <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                        UPI Payment
+                        ${description ? '<br>' + description : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Auto-generate preview when amount changes (only for UPI)
+        document.getElementById('amount').addEventListener('input', function(e) {
+            const method = document.querySelector('input[name="payment_method"]:checked');
+            if (this.value && parseFloat(this.value) > 0 && method && method.value === 'upi') {
+                setTimeout(generatePreview, 500);
+            }
+        });
+        
+        // Format amount input
+        document.getElementById('amount').addEventListener('blur', function(e) {
+            if (this.value) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        });
+        
+        // Auto-focus amount field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('amount').focus();
+        });
+    </script>
+</body>
+</html>
