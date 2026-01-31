@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-bar text-primary me-2"></i>
+            Store Statistics & Reports
+        </h1>
+
+        <!-- Overall Statistics -->
+        <div class="card shadow-sm mb-4 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Overall Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="card border-primary h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-users me-1"></i>Total Customers
+                                </h6>
+                                <h2 class="card-text text-primary">{{ stats.total_customers or 0 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="card border-success h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-exchange-alt me-1"></i>Total Transactions
+                                </h6>
+                                <h2 class="card-text text-success">{{ stats.total_transactions or 0 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="card border-warning h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-boxes me-1"></i>Total Items Sold
+                                </h6>
+                                <h2 class="card-text text-warning">{{ stats.total_items or 0 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="card border-danger h-100">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-rupee-sign me-1"></i>Grand Total
+                                </h6>
+                                <h2 class="card-text text-danger">{{ format_rupees(stats.grand_total or 0) }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <p><strong>First Sale:</strong> {{ stats.first_date or 'No data' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Last Sale:</strong> {{ stats.last_date or 'No data' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Total Days:</strong> {{ stats.total_days or '0' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if recent_dates %}
+        <!-- Recent Dates -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar me-2"></i>
+                    Recent Sales Days
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for date in recent_dates %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ date.date }}</h5>
+                                <p class="card-text">
+                                    <span class="badge bg-primary">{{ date.customer_count }} Customers</span>
+                                    <span class="badge bg-success ms-1">{{ date.transaction_count }} Sales</span>
+                                </p>
+                                <h4 class="text-primary">{{ format_rupees(date.daily_total) }}</h4>
+                                <div class="mt-2">
+                                    <a href="{{ url_for('index', date=date.date) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <a href="{{ url_for('generate_pdf', date=date.date) }}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-file-pdf me-1"></i>PDF
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if top_customers or top_items %}
+        <div class="row">
+            <!-- Top Customers -->
+            {% if top_customers %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-trophy me-2"></i>
+                            Top Customers
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for customer in top_customers %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ customer.customer_name }}</h6>
+                                    <strong>{{ format_rupees(customer.total_spent) }}</strong>
+                                </div>
+                                <p class="mb-1 text-muted small">
+                                    <i class="fas fa-phone me-1"></i>{{ format_phone(customer.phone_number) }}
+                                    <span class="ms-3">
+                                        <i class="fas fa-shopping-cart me-1"></i>{{ customer.transaction_count }} purchases
+                                    </span>
+                                </p>
+                                <p class="mb-0">
+                                    <i class="fas fa-tshirt me-1"></i>{{ customer.total_items }} items
+                                </p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Top Items -->
+            {% if top_items %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-star me-2"></i>
+                            Popular Items
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for item in top_items %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ item.item_name }}</h6>
+                                    <strong>{{ format_rupees(item.item_total) }}</strong>
+                                </div>
+                                <p class="mb-1 text-muted small">
+                                    <i class="fas fa-boxes me-1"></i>{{ item.total_quantity }} pieces sold
+                                    <span class="ms-3">
+                                        <i class="fas fa-users me-1"></i>{{ item.customer_count }} customers
+                                    </span>
+                                </p>
+                                <p class="mb-0">
+                                    Avg: {{ format_rupees(item.item_total/item.total_quantity) }} per piece
+                                </p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Monthly Summary -->
+        {% if monthly_summary %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Monthly Summary (Last 6 Months)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th class="text-center">Customers</th>
+                                <th class="text-center">Transactions</th>
+                                <th class="text-center">Items Sold</th>
+                                <th class="text-end">Revenue (₹)</th>
+                                <th class="text-end">Avg. per Day</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in monthly_summary %}
+                            <tr>
+                                <td><strong>{{ month.month }}</strong></td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary">{{ month.customer_count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">{{ month.transaction_count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning">{{ month.monthly_quantity }}</span>
+                                </td>
+                                <td class="text-end fw-bold">{{ format_rupees(month.monthly_total) }}</td>
+                                <td class="text-end">
+                                    {{ format_rupees(month.monthly_total/30) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td class="text-center">
+                                    <strong>{{ monthly_summary|sum(attribute='customer_count') }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    <strong>{{ monthly_summary|sum(attribute='transaction_count') }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    <strong>{{ monthly_summary|sum(attribute='monthly_quantity') }}</strong>
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {{ format_rupees(monthly_summary|sum(attribute='monthly_total')) }}
+                                </td>
+                                <td class="text-end">
+                                    {{ format_rupees(monthly_summary|sum(attribute='monthly_total')/(monthly_summary|length*30)) }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No statistics available yet</h4>
+                <p class="text-muted">Start adding sales to generate statistics</p>
+                <a href="{{ url_for('add_entry') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-1"></i>Add First Sale
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

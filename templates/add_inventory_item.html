@@ -1,0 +1,636 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Inventory Item{% endblock %}
+
+{% block content %}
+<style>
+    .form-card {
+        border: 2px solid #0066CC;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-card:hover {
+        box-shadow: 0 5px 20px rgba(0, 102, 204, 0.2);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #004C99;
+        font-size: 0.95rem;
+    }
+    
+    .input-group-text {
+        background-color: #E6F2FF;
+        border-color: #0066CC;
+        color: #0066CC;
+        font-weight: 600;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0066CC;
+        box-shadow: 0 0 0 0.25rem rgba(0, 102, 204, 0.25);
+    }
+    
+    .preview-box {
+        background: linear-gradient(135deg, #E6F2FF 0%, #F0F7FF 100%);
+        border: 2px dashed #0066CC;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .preview-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #D1E7FF;
+    }
+    
+    .preview-label {
+        color: #004C99;
+        font-weight: 600;
+    }
+    
+    .preview-value {
+        color: #0066CC;
+        font-weight: 600;
+    }
+    
+    .stock-indicator {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .stock-good {
+        background-color: #28a745;
+    }
+    
+    .stock-warning {
+        background-color: #ffc107;
+    }
+    
+    .stock-danger {
+        background-color: #dc3545;
+    }
+    
+    .category-badge {
+        background-color: #0066CC;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        display: inline-block;
+        margin: 2px;
+    }
+    
+    .required-star {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    .price-display {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #0066CC;
+        background-color: #E6F2FF;
+        padding: 8px 12px;
+        border-radius: 6px;
+        text-align: center;
+    }
+    
+    .profit-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm form-card">
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Add New Clothing Item
+                    </h4>
+                    <span class="badge bg-light text-primary">Inventory</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_inventory_item') }}" id="inventoryForm">
+                    <div class="row">
+                        <!-- Basic Information -->
+                        <div class="col-md-6 mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Basic Information
+                            </h5>
+                            
+                            <!-- Item Code -->
+                            <div class="mb-3">
+                                <label for="item_code" class="form-label">
+                                    <i class="fas fa-barcode me-1 text-primary"></i>
+                                    Item Code
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="item_code"
+                                       name="item_code"
+                                       placeholder="e.g., SH001, SR002, etc."
+                                       value="{{ request.form.item_code if request.form }}">
+                                <div class="help-text">
+                                    Leave blank to auto-generate or enter custom code
+                                </div>
+                            </div>
+
+                            <!-- Item Name -->
+                            <div class="mb-3">
+                                <label for="item_name" class="form-label">
+                                    <i class="fas fa-tshirt me-1 text-primary"></i>
+                                    Item Name <span class="required-star">*</span>
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="item_name"
+                                       name="item_name"
+                                       placeholder="e.g., Cotton Shirt, Silk Saree, Denim Jeans"
+                                       value="{{ request.form.item_name if request.form }}"
+                                       required>
+                                <div class="help-text">
+                                    Descriptive name of the clothing item
+                                </div>
+                            </div>
+
+                            <!-- Category -->
+                            <div class="mb-3">
+                                <label for="category" class="form-label">
+                                    <i class="fas fa-tags me-1 text-primary"></i>
+                                    Category <span class="required-star">*</span>
+                                </label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.category_name }}" 
+                                            {% if request.form and request.form.category == category.category_name %}selected{% endif %}>
+                                        {{ category.category_name }}
+                                    </option>
+                                    {% endfor %}
+                                    <option value="Other">Other</option>
+                                </select>
+                                <div class="help-text">
+                                    Select the item category
+                                </div>
+                            </div>
+
+                            <!-- Size and Color -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="size" class="form-label">
+                                        <i class="fas fa-expand-alt me-1 text-primary"></i>
+                                        Size
+                                    </label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="size"
+                                           name="size"
+                                           placeholder="e.g., M, L, XL, 32, etc."
+                                           value="{{ request.form.size if request.form }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="color" class="form-label">
+                                        <i class="fas fa-palette me-1 text-primary"></i>
+                                        Color
+                                    </label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="color"
+                                           name="color"
+                                           placeholder="e.g., Blue, Red, Black, etc."
+                                           value="{{ request.form.color if request.form }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stock & Pricing -->
+                        <div class="col-md-6 mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-calculator me-2"></i>Pricing & Stock
+                            </h5>
+
+                            <!-- Cost Price -->
+                            <div class="mb-3">
+                                <label for="cost_price" class="form-label">
+                                    <i class="fas fa-money-bill-wave me-1 text-primary"></i>
+                                    Cost Price <span class="required-star">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number"
+                                           class="form-control"
+                                           id="cost_price"
+                                           name="cost_price"
+                                           step="0.01"
+                                           min="0.01"
+                                           placeholder="0.00"
+                                           value="{{ request.form.cost_price if request.form else '' }}"
+                                           required>
+                                </div>
+                                <div class="help-text">
+                                    Price at which you purchased the item
+                                </div>
+                            </div>
+
+                            <!-- Selling Price -->
+                            <div class="mb-3">
+                                <label for="selling_price" class="form-label">
+                                    <i class="fas fa-tag me-1 text-primary"></i>
+                                    Selling Price <span class="required-star">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number"
+                                           class="form-control"
+                                           id="selling_price"
+                                           name="selling_price"
+                                           step="0.01"
+                                           min="0.01"
+                                           placeholder="0.00"
+                                           value="{{ request.form.selling_price if request.form else '' }}"
+                                           required>
+                                </div>
+                                <div class="help-text">
+                                    Price at which you will sell the item
+                                </div>
+                            </div>
+
+                            <!-- Profit Preview -->
+                            <div class="mb-3" id="profitPreview" style="display: none;">
+                                <div class="price-display">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Profit: <span id="profitAmount">₹0.00</span> 
+                                    (<span id="profitPercentage">0%</span>)
+                                </div>
+                            </div>
+
+                            <!-- Stock Information -->
+                            <div class="mb-3">
+                                <label for="current_stock" class="form-label">
+                                    <i class="fas fa-box me-1 text-primary"></i>
+                                    Initial Stock Quantity
+                                </label>
+                                <div class="input-group">
+                                    <input type="number"
+                                           class="form-control"
+                                           id="current_stock"
+                                           name="current_stock"
+                                           min="0"
+                                           value="{{ request.form.current_stock if request.form else 0 }}"
+                                           placeholder="0">
+                                    <span class="input-group-text">pcs</span>
+                                </div>
+                                <div class="help-text">
+                                    Initial quantity in stock (0 if adding later)
+                                </div>
+                            </div>
+
+                            <!-- Minimum Stock -->
+                            <div class="mb-3">
+                                <label for="minimum_stock" class="form-label">
+                                    <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
+                                    Minimum Stock Level
+                                </label>
+                                <div class="input-group">
+                                    <input type="number"
+                                           class="form-control"
+                                           id="minimum_stock"
+                                           name="minimum_stock"
+                                           min="1"
+                                           value="{{ request.form.minimum_stock if request.form else 5 }}"
+                                           placeholder="5">
+                                    <span class="input-group-text">pcs</span>
+                                </div>
+                                <div class="help-text">
+                                    Alert when stock goes below this level
+                                </div>
+                            </div>
+
+                            <!-- Unit -->
+                            <div class="mb-3">
+                                <label for="unit" class="form-label">
+                                    <i class="fas fa-balance-scale me-1 text-primary"></i>
+                                    Unit of Measurement
+                                </label>
+                                <select class="form-select" id="unit" name="unit">
+                                    <option value="pcs" selected>Pieces (pcs)</option>
+                                    <option value="meters">Meters</option>
+                                    <option value="kg">Kilograms</option>
+                                    <option value="pairs">Pairs</option>
+                                    <option value="sets">Sets</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-align-left me-1 text-primary"></i>
+                            Description
+                        </label>
+                        <textarea class="form-control"
+                                  id="description"
+                                  name="description"
+                                  rows="3"
+                                  placeholder="Add detailed description, material, features, etc.">{{ request.form.description if request.form }}</textarea>
+                        <div class="help-text">
+                            Optional: Add details about fabric, quality, features, etc.
+                        </div>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div class="preview-box mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-eye me-2"></i>Item Preview
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="preview-item">
+                                    <span class="preview-label">Item Name:</span>
+                                    <span class="preview-value" id="previewName">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Category:</span>
+                                    <span class="preview-value" id="previewCategory">-</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Size/Color:</span>
+                                    <span class="preview-value" id="previewSizeColor">-</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="preview-item">
+                                    <span class="preview-label">Cost Price:</span>
+                                    <span class="preview-value" id="previewCost">₹0.00</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Selling Price:</span>
+                                    <span class="preview-value" id="previewSelling">₹0.00</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Profit:</span>
+                                    <span class="preview-value" id="previewProfit">₹0.00 (0%)</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="preview-item">
+                                    <span class="preview-label">Stock:</span>
+                                    <span class="preview-value" id="previewStock">0 pcs</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Min Stock:</span>
+                                    <span class="preview-value" id="previewMinStock">5 pcs</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-label">Status:</span>
+                                    <span id="previewStatus">
+                                        <span class="stock-indicator stock-danger"></span>
+                                        <span class="preview-value">Out of Stock</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('inventory') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Item
+                        </button>
+                        <button type="button" class="btn btn-success" id="saveAndAddAnother">
+                            <i class="fas fa-plus-circle me-1"></i>Save & Add Another
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card shadow-sm mt-4 border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-question-circle me-2"></i>Quick Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-lightbulb text-warning me-2"></i>Item Codes</h6>
+                        <p class="small mb-0">Use prefixes: SH for Shirts, PA for Pants, SR for Sarees, etc.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-lightbulb text-warning me-2"></i>Stock Levels</h6>
+                        <p class="small mb-0">Set minimum stock to get alerts before running out.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-lightbulb text-warning me-2"></i>Pricing</h6>
+                        <p class="small mb-0">Cost price is what you pay, Selling price is what customers pay.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for live preview and calculations -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all form inputs
+    const itemCodeInput = document.getElementById('item_code');
+    const itemNameInput = document.getElementById('item_name');
+    const categoryInput = document.getElementById('category');
+    const sizeInput = document.getElementById('size');
+    const colorInput = document.getElementById('color');
+    const costPriceInput = document.getElementById('cost_price');
+    const sellingPriceInput = document.getElementById('selling_price');
+    const currentStockInput = document.getElementById('current_stock');
+    const minStockInput = document.getElementById('minimum_stock');
+    const unitInput = document.getElementById('unit');
+    const descriptionInput = document.getElementById('description');
+    
+    // Preview elements
+    const previewName = document.getElementById('previewName');
+    const previewCategory = document.getElementById('previewCategory');
+    const previewSizeColor = document.getElementById('previewSizeColor');
+    const previewCost = document.getElementById('previewCost');
+    const previewSelling = document.getElementById('previewSelling');
+    const previewProfit = document.getElementById('previewProfit');
+    const previewStock = document.getElementById('previewStock');
+    const previewMinStock = document.getElementById('previewMinStock');
+    const previewStatus = document.getElementById('previewStatus');
+    const profitPreview = document.getElementById('profitPreview');
+    const profitAmount = document.getElementById('profitAmount');
+    const profitPercentage = document.getElementById('profitPercentage');
+    
+    // Format currency
+    function formatCurrency(amount) {
+        return '₹' + parseFloat(amount).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Calculate profit
+    function calculateProfit(cost, selling) {
+        const profit = selling - cost;
+        const percentage = cost > 0 ? (profit / cost) * 100 : 0;
+        return {
+            amount: profit,
+            percentage: percentage
+        };
+    }
+    
+    // Update stock status indicator
+    function updateStockStatus(current, min) {
+        const statusContainer = previewStatus;
+        current = parseInt(current) || 0;
+        min = parseInt(min) || 5;
+        
+        let statusHTML = '';
+        
+        if (current <= 0) {
+            statusHTML = `<span class="stock-indicator stock-danger"></span>
+                         <span class="preview-value">Out of Stock</span>`;
+        } else if (current <= min) {
+            statusHTML = `<span class="stock-indicator stock-warning"></span>
+                         <span class="preview-value">Low Stock</span>`;
+        } else {
+            statusHTML = `<span class="stock-indicator stock-good"></span>
+                         <span class="preview-value">In Stock</span>`;
+        }
+        
+        statusContainer.innerHTML = statusHTML;
+    }
+    
+    // Update all previews
+    function updatePreview() {
+        // Basic info
+        previewName.textContent = itemNameInput.value || '-';
+        previewCategory.textContent = categoryInput.value || '-';
+        
+        // Size and Color
+        const size = sizeInput.value || '';
+        const color = colorInput.value || '';
+        previewSizeColor.textContent = size && color ? `${size} / ${color}` : 
+                                      size ? size : color ? color : '-';
+        
+        // Prices
+        const cost = parseFloat(costPriceInput.value) || 0;
+        const selling = parseFloat(sellingPriceInput.value) || 0;
+        
+        previewCost.textContent = formatCurrency(cost);
+        previewSelling.textContent = formatCurrency(selling);
+        
+        // Profit
+        const profit = calculateProfit(cost, selling);
+        previewProfit.textContent = `${formatCurrency(profit.amount)} (${profit.percentage.toFixed(1)}%)`;
+        
+        // Show/hide profit preview
+        if (cost > 0 && selling > 0) {
+            profitPreview.style.display = 'block';
+            profitAmount.textContent = formatCurrency(profit.amount);
+            profitPercentage.textContent = `${profit.percentage.toFixed(1)}%`;
+            
+            // Add profit badge if good profit
+            if (profit.percentage >= 50) {
+                if (!document.getElementById('profitBadge')) {
+                    const profitBadge = document.createElement('span');
+                    profitBadge.id = 'profitBadge';
+                    profitBadge.className = 'profit-badge ms-2';
+                    profitBadge.textContent = 'Good Profit!';
+                    profitAmount.parentNode.appendChild(profitBadge);
+                }
+            } else {
+                const existingBadge = document.getElementById('profitBadge');
+                if (existingBadge) {
+                    existingBadge.remove();
+                }
+            }
+        } else {
+            profitPreview.style.display = 'none';
+        }
+        
+        // Stock info
+        const stock = parseInt(currentStockInput.value) || 0;
+        const minStock = parseInt(minStockInput.value) || 5;
+        const unit = unitInput.value || 'pcs';
+        
+        previewStock.textContent = `${stock} ${unit}`;
+        previewMinStock.textContent = `${minStock} ${unit}`;
+        
+        // Update stock status
+        updateStockStatus(stock, minStock);
+        
+        // Auto-generate item code if empty and category is selected
+        if (!itemCodeInput.value && categoryInput.value && itemNameInput.value) {
+            const category = categoryInput.value.substring(0, 2).toUpperCase();
+            const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            itemCodeInput.value = `${category}${randomNum}`;
+        }
+    }
+    
+    // Attach event listeners to all inputs
+    const allInputs = [
+        itemCodeInput, itemNameInput, categoryInput, sizeInput, colorInput,
+        costPriceInput, sellingPriceInput, currentStockInput, minStockInput,
+        unitInput, descriptionInput
+    ];
+    
+    allInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', updatePreview);
+            input.addEventListener('change', updatePreview);
+        }
+    });
+    
+    // Initialize preview
+    updatePreview();
+    
+    // Save and Add Another button
+    const saveAndAddAnotherBtn = document.getElementById('saveAndAddAnother');
+    if (saveAndAddAnotherBtn) {
+        saveAndAddAnotherBtn.addEventListener('click', function() {
+            // Create a hidden input to indicate "save and add another"
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'save_and_add';
+            hiddenInput.value = 'true';
+            document.getElementById('inventoryForm').appendChild(hiddenInput);
+            
+            // Submit the form
+            document.getElementById('inventoryForm').submit();
+        });
+    }
+    
+    // Auto-focus first input
+    if (itemNameInput) {
+        itemNameInput.focus();
+    }
+});
+</script>
+{% endblock %}

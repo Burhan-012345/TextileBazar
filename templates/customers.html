@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-0">
+            <i class="fas fa-users text-primary me-2"></i>
+            Customer Management
+        </h1>
+        <p class="text-muted">View and manage all customers</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <form class="d-inline" action="{{ url_for('search_customers') }}" method="GET">
+            <div class="input-group">
+                <input type="text" class="form-control" name="q" placeholder="Search customers...">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customer Statistics -->
+{% if customers %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-user-friends me-2"></i>
+                    Total Customers
+                </h5>
+                <h2 class="card-text">{{ stats.total_customers or 0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-rupee-sign me-2"></i>
+                    Total Revenue
+                </h5>
+                <h2 class="card-text">{{ format_rupees(stats.total_revenue or 0) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Avg. Spent
+                </h5>
+                <h2 class="card-text">{{ format_rupees(stats.avg_spent or 0) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-calendar me-2"></i>
+                    First Customer
+                </h5>
+                <h6 class="card-text">{{ stats.first_customer_date or 'N/A' }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Customers Table -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                All Customers ({{ customers|length }})
+            </h5>
+            <a href="{{ url_for('home') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if customers %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Customer Name</th>
+                            <th>Phone Number</th>
+                            <th class="text-end">Total Spent (₹)</th>
+                            <th class="text-end">Transactions</th>
+                            <th class="text-center">Last Purchase</th>
+                            <th class="text-center">Customer Since</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <strong>{{ customer['name'] }}</strong>
+                            </td>
+                            <td>
+                                <a href="tel:+91{{ customer['phone'] }}" class="text-decoration-none">
+                                    <i class="fas fa-phone me-1 text-muted"></i>
+                                    {{ format_phone(customer['phone']) }}
+                                </a>
+                            </td>
+                            <td class="text-end fw-bold">{{ format_rupees(customer['total_purchases']) }}</td>
+                            <td class="text-end">
+                                <span class="badge bg-primary">{{ customer['total_transactions'] or 0 }}</span>
+                            </td>
+                            <td class="text-center">
+                                {{ customer['last_purchase_date'] or customer['recent_purchase_date'] or 'N/A' }}
+                            </td>
+                            <td class="text-center">
+                                {{ customer['created_date'] }}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('customer_detail', phone=customer['phone']) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="{{ url_for('search') }}?customer={{ customer['name'] }}" 
+                                       class="btn btn-outline-info">
+                                        <i class="fas fa-history"></i> History
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No customers found</h4>
+                <p class="text-muted">Start adding sales to see customers here</p>
+                <a href="{{ url_for('add_entry') }}" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus-circle me-1"></i>Add First Sale
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Top Customers -->
+{% if customers %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Top Spenders
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% set top_spenders = customers|sort(attribute='total_purchases', reverse=true) %}
+                    {% for customer in top_spenders[:5] %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ customer['name'] }}</h6>
+                            <strong>{{ format_rupees(customer['total_purchases']) }}</strong>
+                        </div>
+                        <p class="mb-1 text-muted small">
+                            <i class="fas fa-phone me-1"></i>{{ format_phone(customer['phone']) }}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    Loyal Customers
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% set loyal_customers = customers|sort(attribute='total_transactions', reverse=true) %}
+                    {% for customer in loyal_customers[:5] %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ customer['name'] }}</h6>
+                            <span class="badge bg-primary">{{ customer['total_transactions'] or 0 }} purchases</span>
+                        </div>
+                        <p class="mb-1 text-muted small">
+                            Since {{ customer['created_date'] }}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

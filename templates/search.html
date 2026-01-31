@@ -1,0 +1,652 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<style>
+    /* Search Page Specific Styles */
+    :root {
+        --primary-blue: #0066CC;
+        --light-blue: #E6F2FF;
+        --dark-blue: #004C99;
+        --pure-white: #FFFFFF;
+        --light-bg: #F8F9FA;
+    }
+    
+    .search-results-container {
+        background: linear-gradient(135deg, var(--light-bg) 0%, var(--light-blue) 100%);
+        min-height: calc(100vh - 200px);
+        padding: 20px 0;
+    }
+    
+    .search-header {
+        background: var(--pure-white);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 5px solid var(--primary-blue);
+    }
+    
+    .search-form-card {
+        background: var(--pure-white);
+        border: 2px solid var(--light-blue);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .search-form-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 102, 204, 0.15);
+        border-color: var(--primary-blue);
+    }
+    
+    .search-input {
+        border: 2px solid var(--light-blue);
+        border-radius: 8px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    
+    .search-btn {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+    }
+    
+    .search-summary {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0, 102, 204, 0.2);
+    }
+    
+    .summary-badge {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 15px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .results-table {
+        background: var(--pure-white);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+    }
+    
+    .table-header {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+        color: white;
+    }
+    
+    .table-row {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid var(--light-blue);
+    }
+    
+    .table-row:hover {
+        background-color: var(--light-blue);
+        transform: scale(1.002);
+    }
+    
+    .customer-breakdown-card,
+    .item-breakdown-card,
+    .date-breakdown-card {
+        background: var(--pure-white);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .customer-breakdown-card:hover,
+    .item-breakdown-card:hover,
+    .date-breakdown-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.15);
+    }
+    
+    .card-header-blue {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+        color: white;
+        padding: 15px 20px;
+        border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .card-header-green {
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        color: white;
+        padding: 15px 20px;
+        border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .card-header-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        padding: 15px 20px;
+        border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid var(--light-blue);
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .list-group-item:hover {
+        background-color: var(--light-blue);
+        border-left: 4px solid var(--primary-blue);
+    }
+    
+    .action-btn {
+        background: var(--pure-white);
+        border: 2px solid var(--light-blue);
+        border-radius: 6px;
+        padding: 6px 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        background: var(--primary-blue);
+        color: white;
+        border-color: var(--primary-blue);
+        transform: translateY(-2px);
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .badge-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .badge-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    
+    .no-results-card {
+        background: var(--pure-white);
+        border: 2px dashed var(--light-blue);
+        border-radius: 12px;
+        padding: 50px 20px;
+        text-align: center;
+    }
+    
+    .no-results-icon {
+        color: var(--primary-blue);
+        opacity: 0.5;
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+    
+    .results-count {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .search-header {
+            padding: 15px;
+        }
+        
+        .search-form-card {
+            padding: 15px !important;
+        }
+        
+        .results-table {
+            font-size: 14px;
+        }
+        
+        .action-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+    }
+</style>
+
+<div class="search-results-container">
+    <!-- Header Section -->
+    <div class="search-header">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <h1 class="mb-2" style="color: var(--primary-blue);">
+                    <i class="fas fa-search me-2"></i>
+                    Search Results
+                </h1>
+                <p class="text-muted">
+                    Found <span class="results-count">{{ item_count }} item{% if item_count != 1 %}s{% endif %}</span>
+                    {% if search_query %}for "{{ search_query }}"{% endif %}
+                    {% if search_date %}for date "{{ search_date }}"{% endif %}
+                    {% if search_customer %}for customer "{{ search_customer }}"{% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{{ url_for('home') }}" class="btn search-btn">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card search-form-card mb-4">
+        <div class="card-body p-4">
+            <h5 class="card-title mb-3" style="color: var(--dark-blue);">
+                <i class="fas fa-search me-2"></i>
+                Search Items
+            </h5>
+            <form action="{{ url_for('search') }}" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" style="color: var(--dark-blue); font-weight: 500;">
+                        <i class="fas fa-box me-1"></i>Item Name
+                    </label>
+                    <input type="text" 
+                           class="form-control search-input" 
+                           name="q" 
+                           value="{{ search_query }}"
+                           placeholder="Search by item name...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" style="color: var(--dark-blue); font-weight: 500;">
+                        <i class="fas fa-calendar me-1"></i>Date
+                    </label>
+                    <input type="date" 
+                           class="form-control search-input" 
+                           name="date" 
+                           value="{{ search_date }}"
+                           placeholder="Search by date">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" style="color: var(--dark-blue); font-weight: 500;">
+                        <i class="fas fa-user me-1"></i>Customer
+                    </label>
+                    <input type="text" 
+                           class="form-control search-input" 
+                           name="customer" 
+                           value="{{ search_customer }}"
+                           placeholder="Search by customer">
+                </div>
+                <div class="col-md-12 text-center mt-3">
+                    <button type="submit" class="btn search-btn me-2">
+                        <i class="fas fa-search me-1"></i>Search
+                    </button>
+                    <a href="{{ url_for('search') }}" class="btn action-btn">
+                        <i class="fas fa-redo me-1"></i>Clear Search
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Search Summary -->
+    {% if items %}
+    <div class="search-summary">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-2">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Search Summary
+                </h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="summary-badge">
+                        <i class="fas fa-users me-1"></i>{{ customer_count }} Customers
+                    </span>
+                    <span class="summary-badge">
+                        <i class="fas fa-boxes me-1"></i>{{ item_count }} Items
+                    </span>
+                    <span class="summary-badge">
+                        <i class="fas fa-rupee-sign me-1"></i>{{ format_rupees(total_amount) }} Total
+                    </span>
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('generate_pdf', date=search_date) if search_date else '#' }}" 
+                   class="btn {{ 'search-btn' if search_date else 'action-btn disabled' }}">
+                    <i class="fas fa-file-pdf me-1"></i>Export PDF
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Search Results Table -->
+    <div class="results-table">
+        <div class="table-header p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Search Results
+                </h5>
+                {% if items %}
+                <span class="badge bg-light text-primary" style="font-size: 1rem;">
+                    Total: {{ format_rupees(total_amount) }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="p-3">
+            {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light" style="background-color: var(--light-blue);">
+                            <tr>
+                                <th style="color: var(--dark-blue);">#</th>
+                                <th style="color: var(--dark-blue);">
+                                    <i class="fas fa-calendar me-1"></i>Date
+                                </th>
+                                <th style="color: var(--dark-blue);">
+                                    <i class="fas fa-user me-1"></i>Customer
+                                </th>
+                                <th style="color: var(--dark-blue);">
+                                    <i class="fas fa-phone me-1"></i>Phone
+                                </th>
+                                <th style="color: var(--dark-blue);">
+                                    <i class="fas fa-box me-1"></i>Item
+                                </th>
+                                <th class="text-end" style="color: var(--dark-blue);">
+                                    <i class="fas fa-rupee-sign me-1"></i>Price
+                                </th>
+                                <th class="text-end" style="color: var(--dark-blue);">
+                                    <i class="fas fa-hashtag me-1"></i>Qty
+                                </th>
+                                <th class="text-end" style="color: var(--dark-blue);">
+                                    <i class="fas fa-calculator me-1"></i>Total
+                                </th>
+                                <th class="text-center" style="color: var(--dark-blue);">
+                                    <i class="fas fa-paper-plane me-1"></i>Bill Sent
+                                </th>
+                                <th class="text-center" style="color: var(--dark-blue);">
+                                    <i class="fas fa-cog me-1"></i>Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr class="table-row">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item['date'] }}</td>
+                                <td>
+                                    <strong style="color: var(--dark-blue);">{{ item['customer_name'] }}</strong>
+                                </td>
+                                <td>
+                                    <a href="tel:+91{{ item['phone_number'] }}" class="text-decoration-none" style="color: var(--primary-blue);">
+                                        <i class="fas fa-phone me-1"></i>
+                                        {{ format_phone(item['phone_number']) }}
+                                    </a>
+                                </td>
+                                <td>{{ item['item_name'] }}</td>
+                                <td class="text-end">{{ format_rupees(item['price']) }}</td>
+                                <td class="text-end">{{ item['quantity'] }}</td>
+                                <td class="text-end fw-bold" style="color: var(--primary-blue);">
+                                    {{ format_rupees(item['total']) }}
+                                </td>
+                                <td class="text-center">
+                                    {% if item['bill_sent_status'] == 'Yes' %}
+                                    <span class="badge-success status-badge">
+                                        <i class="fas fa-check me-1"></i>Yes
+                                    </span>
+                                    {% else %}
+                                    <span class="badge-warning status-badge">
+                                        <i class="fas fa-times me-1"></i>No
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('edit_entry', id=item['id']) }}" 
+                                           class="btn action-btn" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ url_for('send_whatsapp', id=item['id']) }}" 
+                                           class="btn action-btn" title="Send WhatsApp"
+                                           onclick="return confirm('Send WhatsApp to {{ item.customer_name }}?')">
+                                            <i class="fab fa-whatsapp"></i>
+                                        </a>
+                                        <a href="{{ url_for('delete_entry', id=item['id']) }}" 
+                                           class="btn action-btn" title="Delete"
+                                           onclick="return confirm('Delete this sale?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot style="background-color: var(--light-blue);">
+                            <tr>
+                                <td colspan="7" class="text-end fw-bold" style="color: var(--dark-blue);">
+                                    Search Total:
+                                </td>
+                                <td class="text-end fw-bold" style="color: var(--primary-blue); font-size: 1.1rem;">
+                                    {{ format_rupees(total_amount) }}
+                                </td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <div class="no-results-card">
+                    <i class="fas fa-search no-results-icon"></i>
+                    <h4 class="mb-3" style="color: var(--dark-blue);">
+                        {% if search_query or search_date or search_customer %}
+                        No items found matching your search
+                        {% else %}
+                        Search for items, dates, or customers
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-4">
+                        {% if search_query %}
+                        Try a different search term
+                        {% elif search_date %}
+                        Try a different date
+                        {% elif search_customer %}
+                        Try a different customer name
+                        {% else %}
+                        Enter a search term above
+                        {% endif %}
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('index') }}" class="btn search-btn">
+                            <i class="fas fa-home me-1"></i>Go to Dashboard
+                        </a>
+                        <a href="{{ url_for('add_entry') }}" class="btn action-btn">
+                            <i class="fas fa-plus-circle me-1"></i>Add New Item
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Breakdown Sections -->
+    {% if items %}
+    <div class="row mt-4">
+        <!-- Customer Breakdown -->
+        <div class="col-md-6 mb-4">
+            <div class="customer-breakdown-card">
+                <div class="card-header-blue">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Customer Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% set customer_totals = {} %}
+                        {% for item in items %}
+                            {% set name = item['customer_name'] %}
+                            {% set _ = customer_totals.update({name: customer_totals.get(name, 0) + item['total']}) %}
+                        {% endfor %}
+                        
+                        {% for customer, total in customer_totals|dictsort(by='value', reverse=true) %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1" style="color: var(--dark-blue);">{{ customer }}</h6>
+                                <strong style="color: var(--primary-blue);">{{ format_rupees(total) }}</strong>
+                            </div>
+                            <p class="mb-1 text-muted small">
+                                {% set customer_items = items|selectattr('customer_name', 'equalto', customer)|list %}
+                                <i class="fas fa-box me-1"></i>{{ customer_items|length }} item{% if customer_items|length != 1 %}s{% endif %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Item Breakdown -->
+        <div class="col-md-6 mb-4">
+            <div class="item-breakdown-card">
+                <div class="card-header-green">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Item Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% set item_totals = {} %}
+                        {% for item in items %}
+                            {% set name = item['item_name'] %}
+                            {% set _ = item_totals.update({name: item_totals.get(name, 0) + item['quantity']}) %}
+                        {% endfor %}
+                        
+                        {% for item_name, quantity in item_totals|dictsort(by='value', reverse=true) %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1" style="color: var(--dark-blue);">{{ item_name }}</h6>
+                                <span class="badge bg-primary" style="background: var(--primary-blue);">{{ quantity }}</span>
+                            </div>
+                            <p class="mb-1 text-muted small">
+                                {% set item_sales = items|selectattr('item_name', 'equalto', item_name)|list %}
+                                <i class="fas fa-shopping-cart me-1"></i>Sold {{ item_sales|length }} time{% if item_sales|length != 1 %}s{% endif %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Date Distribution -->
+    {% if items and items|map(attribute='date')|unique|list|length > 1 %}
+    <div class="date-breakdown-card mt-4">
+        <div class="card-header-info">
+            <h5 class="mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Date Distribution
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                {% set date_totals = {} %}
+                {% for item in items %}
+                    {% set date = item['date'] %}
+                    {% set _ = date_totals.update({date: date_totals.get(date, 0) + item['total']}) %}
+                {% endfor %}
+                
+                {% for date, total in date_totals|dictsort(by='key', reverse=true) %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1" style="color: var(--dark-blue);">{{ date }}</h6>
+                        <strong style="color: var(--primary-blue);">{{ format_rupees(total) }}</strong>
+                    </div>
+                    <p class="mb-1 text-muted small">
+                        {% set date_items = items|selectattr('date', 'equalto', date)|list %}
+                        <i class="fas fa-file-invoice-dollar me-1"></i>{{ date_items|length }} sale{% if date_items|length != 1 %}s{% endif %}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Add smooth scrolling for better UX
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight active search inputs
+        const searchInputs = document.querySelectorAll('.search-input');
+        searchInputs.forEach(input => {
+            if (input.value) {
+                input.parentElement.classList.add('active');
+            }
+            
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('active');
+            });
+            
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.parentElement.classList.remove('active');
+                }
+            });
+        });
+        
+        // Add animation to results count
+        const resultsCount = document.querySelector('.results-count');
+        if (resultsCount) {
+            setTimeout(() => {
+                resultsCount.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    resultsCount.style.transform = 'scale(1)';
+                }, 300);
+            }, 500);
+        }
+        
+        // Smooth table row hover
+        const tableRows = document.querySelectorAll('.table-row');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.002)';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    });
+</script>
+{% endblock %}

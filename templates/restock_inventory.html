@@ -1,0 +1,775 @@
+{% extends "base.html" %}
+
+{% block title %}Restock Inventory{% endblock %}
+
+{% block content %}
+<style>
+    .restock-card {
+        border: 2px solid #28a745;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .restock-card:hover {
+        box-shadow: 0 5px 20px rgba(40, 167, 69, 0.2);
+    }
+    
+    .low-stock-card {
+        border: 2px solid #ffc107;
+        background-color: #fffcf5;
+    }
+    
+    .stock-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .item-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        transition: all 0.2s ease;
+        background-color: #fff;
+    }
+    
+    .item-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: #0066CC;
+    }
+    
+    .item-card.selected {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+    
+    .stock-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    
+    .stock-good { background-color: #28a745; }
+    .stock-warning { background-color: #ffc107; }
+    .stock-danger { background-color: #dc3545; }
+    
+    .quantity-input {
+        width: 80px;
+        text-align: center;
+        font-weight: 600;
+        border: 2px solid #28a745;
+        border-radius: 5px;
+        padding: 5px;
+    }
+    
+    .quantity-input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .quantity-btn {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .quantity-minus {
+        background-color: #f8d7da;
+        color: #dc3545;
+        border: 2px solid #f5c6cb;
+    }
+    
+    .quantity-plus {
+        background-color: #d4edda;
+        color: #28a745;
+        border: 2px solid #c3e6cb;
+    }
+    
+    .quantity-minus:hover {
+        background-color: #f1b0b7;
+        border-color: #ed969e;
+    }
+    
+    .quantity-plus:hover {
+        background-color: #c3e6cb;
+        border-color: #b1dfbb;
+    }
+    
+    .stock-meter {
+        height: 6px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+    
+    .stock-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+        transition: width 0.3s ease;
+    }
+    
+    .total-card {
+        background: linear-gradient(135deg, #f8fff9 0%, #e8f7ec 100%);
+        border: 2px solid #28a745;
+    }
+    
+    .batch-input {
+        background-color: #f8f9fa;
+        border: 2px solid #dee2e6;
+        border-radius: 5px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .batch-input:focus {
+        border-color: #28a745;
+        background-color: white;
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .item-badge {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+    }
+    
+    .restock-batch {
+        background-color: #e6f2ff;
+        border: 2px dashed #0066CC;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm restock-card">
+            <div class="card-header stock-header py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-box-open me-2"></i>
+                        Restock Inventory Items
+                    </h4>
+                    <span class="badge bg-light text-success">
+                        {{ low_stock_items|length if low_stock_items else 0 }} Items Need Restocking
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Restock Form -->
+                <form method="POST" action="{{ url_for('restock_inventory') }}" id="restockForm">
+                    
+                    <!-- Low Stock Items Section -->
+                    {% if low_stock_items %}
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-warning mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Low Stock Items (Priority)
+                            </h5>
+                            <button type="button" class="btn btn-sm btn-warning" id="selectAllLowStock">
+                                <i class="fas fa-check-square me-1"></i>Select All
+                            </button>
+                        </div>
+                        
+                        <div class="low-stock-card p-3 mb-3">
+                            <div class="row">
+                                {% for item in low_stock_items %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="item-card p-3" data-item-id="{{ item.id }}">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="mb-1">{{ item.item_name }}</h6>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <span class="stock-indicator stock-warning"></span>
+                                                    <small class="text-warning fw-bold">
+                                                        Current: {{ item.current_stock }} {{ item.unit }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-warning item-badge">Low Stock</span>
+                                        </div>
+                                        
+                                        <div class="stock-meter">
+                                            <div class="stock-fill" 
+                                                 style="width: {{ (item.current_stock / (item.minimum_stock * 3)) * 100 }}%">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            <small class="text-muted">
+                                                Min: {{ item.minimum_stock }} {{ item.unit }}
+                                            </small>
+                                            <div class="d-flex align-items-center">
+                                                <div class="quantity-btn quantity-minus me-2" onclick="adjustQuantity('item_{{ item.id }}_quantity', -1)">-</div>
+                                                <input type="number" 
+                                                       class="quantity-input" 
+                                                       id="item_{{ item.id }}_quantity"
+                                                       name="item_{{ item.id }}_quantity"
+                                                       value="{{ item.minimum_stock * 2 - item.current_stock }}"
+                                                       min="1"
+                                                       max="1000">
+                                                <div class="quantity-btn quantity-plus ms-2" onclick="adjustQuantity('item_{{ item.id }}_quantity', 1)">+</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-2">
+                                            <input type="text"
+                                                   class="form-control form-control-sm batch-input"
+                                                   id="item_{{ item.id }}_notes"
+                                                   name="item_{{ item.id }}_notes"
+                                                   placeholder="Add notes (optional)">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- All Items Section -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-primary mb-0">
+                                <i class="fas fa-boxes me-2"></i>
+                                All Inventory Items
+                            </h5>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-primary me-2" id="selectAllItems">
+                                    <i class="fas fa-check-square me-1"></i>Select All
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllItems">
+                                    <i class="fas fa-times-circle me-1"></i>Clear All
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {% if all_items %}
+                        <div class="row">
+                            {% for item in all_items %}
+                            <div class="col-md-6 mb-3">
+                                <div class="item-card p-3" data-item-id="{{ item.id }}">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">{{ item.item_name }}</h6>
+                                            <div class="d-flex align-items-center mb-2">
+                                                {% if item.current_stock <= 0 %}
+                                                <span class="stock-indicator stock-danger"></span>
+                                                <small class="text-danger fw-bold">
+                                                    Out of Stock
+                                                </small>
+                                                {% elif item.current_stock <= item.minimum_stock %}
+                                                <span class="stock-indicator stock-warning"></span>
+                                                <small class="text-warning fw-bold">
+                                                    Low: {{ item.current_stock }} {{ item.unit }}
+                                                </small>
+                                                {% else %}
+                                                <span class="stock-indicator stock-good"></span>
+                                                <small class="text-success fw-bold">
+                                                    Stock: {{ item.current_stock }} {{ item.unit }}
+                                                </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-secondary item-badge me-1">{{ item.category }}</span>
+                                            {% if item.current_stock <= 0 %}
+                                            <span class="badge bg-danger item-badge">Out</span>
+                                            {% elif item.current_stock <= item.minimum_stock %}
+                                            <span class="badge bg-warning item-badge">Low</span>
+                                            {% else %}
+                                            <span class="badge bg-success item-badge">OK</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="stock-meter">
+                                        <div class="stock-fill" 
+                                             style="width: {{ (item.current_stock / (item.minimum_stock * 3)) * 100 if item.current_stock <= item.minimum_stock * 3 else 100 }}%">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-tshirt me-1"></i>{{ item.item_code }}
+                                        </small>
+                                        <div class="d-flex align-items-center">
+                                            <div class="quantity-btn quantity-minus me-2" onclick="adjustQuantity('item_{{ item.id }}_quantity', -1)">-</div>
+                                            <input type="number" 
+                                                   class="quantity-input" 
+                                                   id="item_{{ item.id }}_quantity"
+                                                   name="item_{{ item.id }}_quantity"
+                                                   value="0"
+                                                   min="0"
+                                                   max="1000">
+                                            <div class="quantity-btn quantity-plus ms-2" onclick="adjustQuantity('item_{{ item.id }}_quantity', 1)">+</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-2">
+                                        <input type="text"
+                                               class="form-control form-control-sm batch-input"
+                                               id="item_{{ item.id }}_notes"
+                                               name="item_{{ item.id }}_notes"
+                                               placeholder="Restock notes (optional)">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <h5>No Inventory Items Found</h5>
+                            <p class="mb-0">Add items to your inventory first.</p>
+                            <a href="{{ url_for('add_inventory_item') }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-plus-circle me-1"></i>Add New Item
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Batch Information -->
+                    <div class="restock-batch mb-4">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            Batch Information
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar me-1 text-primary"></i>
+                                    Restock Date
+                                </label>
+                                <input type="date" 
+                                       class="form-control" 
+                                       id="restock_date"
+                                       value="{{ current_date }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-file-invoice me-1 text-primary"></i>
+                                    Supplier/Batch Number
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="batch_number"
+                                       placeholder="e.g., SUP-001, BATCH-2024">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-sticky-note me-1 text-primary"></i>
+                                General Notes (applies to all items)
+                            </label>
+                            <textarea class="form-control" 
+                                      id="batch_notes" 
+                                      rows="2"
+                                      placeholder="Add general notes about this restock batch..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Card -->
+                    <div class="card total-card mb-4">
+                        <div class="card-body">
+                            <h5 class="text-success mb-3">
+                                <i class="fas fa-calculator me-2"></i>
+                                Restock Summary
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Total Items Selected:</span>
+                                        <strong id="totalItemsCount">0</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Total Quantity to Add:</span>
+                                        <strong id="totalQuantityCount">0</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Estimated Cost:</span>
+                                        <strong id="estimatedCost">₹0.00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Low Stock Items:</span>
+                                        <strong id="lowStockCount">{{ low_stock_items|length if low_stock_items else 0 }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('inventory') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success" id="submitRestock">
+                            <i class="fas fa-box-open me-1"></i>Restock Selected Items
+                        </button>
+                        <button type="button" class="btn btn-primary" id="previewRestock">
+                            <i class="fas fa-eye me-1"></i>Preview Restock
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar - Quick Actions -->
+    <div class="col-lg-4">
+        <!-- Quick Restock Card -->
+        <div class="card shadow-sm mb-4 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('inventory') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-boxes me-2"></i>View Inventory
+                    </a>
+                    <a href="{{ url_for('add_inventory_item') }}" class="btn btn-outline-success">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Item
+                    </a>
+                    <a href="{{ url_for('inventory_report') }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-2"></i>Inventory Report
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Restock Tips Card -->
+        <div class="card shadow-sm mb-4 border-warning">
+            <div class="card-header bg-warning text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Restock Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>Restock low items to 2x minimum stock</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>Check supplier prices before ordering</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>Update notes for future reference</small>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>Plan restocks based on sales history</small>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>Always verify received quantities</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Recent Restocks Card -->
+        <div class="card shadow-sm border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Restocks
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_movements %}
+                <div class="list-group list-group-flush">
+                    {% for movement in recent_movements[:5] %}
+                    <div class="list-group-item px-0 py-2">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ movement.item_name }}</h6>
+                            <small class="text-success">+{{ movement.quantity }}</small>
+                        </div>
+                        <small class="text-muted">
+                            {{ movement.created_date[:10] }} • {{ movement.created_by or 'System' }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0 text-center">No recent restocks</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for restock functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Quantity adjustment function
+    window.adjustQuantity = function(inputId, change) {
+        const input = document.getElementById(inputId);
+        let value = parseInt(input.value) || 0;
+        value += change;
+        if (value < 0) value = 0;
+        if (value > 1000) value = 1000;
+        input.value = value;
+        updateSummary();
+        highlightItem(input);
+    };
+    
+    // Highlight item card when quantity is changed
+    function highlightItem(input) {
+        const itemId = input.id.replace('_quantity', '');
+        const itemCard = document.querySelector(`[data-item-id="${itemId.replace('item_', '')}"]`);
+        if (itemCard) {
+            const quantity = parseInt(input.value) || 0;
+            if (quantity > 0) {
+                itemCard.classList.add('selected');
+            } else {
+                itemCard.classList.remove('selected');
+            }
+        }
+    }
+    
+    // Update restock summary
+    function updateSummary() {
+        let totalItems = 0;
+        let totalQuantity = 0;
+        let estimatedCost = 0;
+        
+        // Get all quantity inputs
+        const quantityInputs = document.querySelectorAll('input[id$="_quantity"]');
+        quantityInputs.forEach(input => {
+            const quantity = parseInt(input.value) || 0;
+            if (quantity > 0) {
+                totalItems++;
+                totalQuantity += quantity;
+                
+                // Estimate cost (this would need actual cost data from server)
+                // For now, using placeholder
+                estimatedCost += quantity * 100; // Assuming ₹100 per item average
+            }
+        });
+        
+        // Update summary display
+        document.getElementById('totalItemsCount').textContent = totalItems;
+        document.getElementById('totalQuantityCount').textContent = totalQuantity;
+        document.getElementById('estimatedCost').textContent = '₹' + estimatedCost.toLocaleString('en-IN');
+        
+        // Update submit button state
+        const submitBtn = document.getElementById('submitRestock');
+        if (submitBtn) {
+            submitBtn.disabled = totalItems === 0;
+        }
+    }
+    
+    // Select all low stock items
+    document.getElementById('selectAllLowStock')?.addEventListener('click', function() {
+        const lowStockCards = document.querySelectorAll('.low-stock-card .quantity-input');
+        lowStockCards.forEach(input => {
+            const itemId = input.id.replace('_quantity', '');
+            const item = {{ low_stock_items|tojson|safe }};
+            const foundItem = item.find(i => 'item_' + i.id + '_quantity' === input.id);
+            if (foundItem) {
+                const recommendedQty = foundItem.minimum_stock * 2 - foundItem.current_stock;
+                input.value = Math.max(recommendedQty, 10); // Minimum 10 if calculation is low
+                highlightItem(input);
+            }
+        });
+        updateSummary();
+    });
+    
+    // Select all items
+    document.getElementById('selectAllItems')?.addEventListener('click', function() {
+        const allQuantityInputs = document.querySelectorAll('.item-card .quantity-input');
+        allQuantityInputs.forEach(input => {
+            if (parseInt(input.value) === 0) {
+                input.value = 10; // Default 10 for all
+                highlightItem(input);
+            }
+        });
+        updateSummary();
+    });
+    
+    // Clear all items
+    document.getElementById('clearAllItems')?.addEventListener('click', function() {
+        const allQuantityInputs = document.querySelectorAll('.item-card .quantity-input');
+        allQuantityInputs.forEach(input => {
+            input.value = 0;
+            highlightItem(input);
+        });
+        updateSummary();
+    });
+    
+    // Initialize item cards with click handlers
+    const itemCards = document.querySelectorAll('.item-card');
+    itemCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't trigger if clicking on input or button
+            if (!e.target.classList.contains('quantity-input') && 
+                !e.target.classList.contains('quantity-btn') &&
+                !e.target.classList.contains('batch-input')) {
+                
+                const itemId = this.getAttribute('data-item-id');
+                const quantityInput = document.getElementById(`item_${itemId}_quantity`);
+                if (quantityInput) {
+                    let currentValue = parseInt(quantityInput.value) || 0;
+                    quantityInput.value = currentValue === 0 ? 10 : 0;
+                    highlightItem(quantityInput);
+                    updateSummary();
+                }
+            }
+        });
+    });
+    
+    // Add event listeners to all quantity inputs
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    quantityInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            highlightItem(this);
+            updateSummary();
+        });
+        input.addEventListener('change', function() {
+            highlightItem(this);
+            updateSummary();
+        });
+    });
+    
+    // Preview restock
+    document.getElementById('previewRestock')?.addEventListener('click', function() {
+        const selectedItems = [];
+        const quantityInputs = document.querySelectorAll('input[id$="_quantity"]');
+        
+        quantityInputs.forEach(input => {
+            const quantity = parseInt(input.value) || 0;
+            if (quantity > 0) {
+                const itemId = input.id.replace('_quantity', '').replace('item_', '');
+                const notesInput = document.getElementById(`item_${itemId}_notes`);
+                selectedItems.push({
+                    id: itemId,
+                    quantity: quantity,
+                    notes: notesInput?.value || ''
+                });
+            }
+        });
+        
+        if (selectedItems.length === 0) {
+            alert('Please select at least one item to restock.');
+            return;
+        }
+        
+        // Show preview in alert (in real app, this would be a modal)
+        const itemCount = selectedItems.length;
+        const totalQty = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+        
+        let previewText = `Restock Preview:\n\n`;
+        previewText += `• Total Items: ${itemCount}\n`;
+        previewText += `• Total Quantity: ${totalQty}\n\n`;
+        previewText += `Selected Items:\n`;
+        
+        selectedItems.slice(0, 5).forEach(item => {
+            previewText += `  • Item ${item.id}: ${item.quantity} units\n`;
+        });
+        
+        if (selectedItems.length > 5) {
+            previewText += `  • ...and ${selectedItems.length - 5} more items\n`;
+        }
+        
+        previewText += `\nClick "Restock Selected Items" to confirm.`;
+        
+        alert(previewText);
+    });
+    
+    // Form submission handling
+    const form = document.getElementById('restockForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const quantityInputs = document.querySelectorAll('input[id$="_quantity"]');
+            let hasSelectedItems = false;
+            
+            quantityInputs.forEach(input => {
+                if (parseInt(input.value) > 0) {
+                    hasSelectedItems = true;
+                }
+            });
+            
+            if (!hasSelectedItems) {
+                e.preventDefault();
+                alert('Please select at least one item to restock.');
+                return;
+            }
+            
+            // Add batch info to form data
+            const batchDate = document.getElementById('restock_date');
+            const batchNumber = document.getElementById('batch_number');
+            const batchNotes = document.getElementById('batch_notes');
+            
+            if (batchDate && batchDate.value) {
+                const dateInput = document.createElement('input');
+                dateInput.type = 'hidden';
+                dateInput.name = 'batch_date';
+                dateInput.value = batchDate.value;
+                this.appendChild(dateInput);
+            }
+            
+            if (batchNumber && batchNumber.value) {
+                const batchInput = document.createElement('input');
+                batchInput.type = 'hidden';
+                batchInput.name = 'batch_number';
+                batchInput.value = batchNumber.value;
+                this.appendChild(batchInput);
+            }
+            
+            if (batchNotes && batchNotes.value) {
+                const notesInput = document.createElement('input');
+                notesInput.type = 'hidden';
+                notesInput.name = 'batch_notes';
+                notesInput.value = batchNotes.value;
+                this.appendChild(notesInput);
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitRestock');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+    
+    // Initialize summary
+    updateSummary();
+    
+    // Set default date to today
+    const dateInput = document.getElementById('restock_date');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-0">
+            <i class="fas fa-user text-primary me-2"></i>
+            {{ customer.name }}
+        </h1>
+        <p class="text-muted">Customer Details & Purchase History</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('customers') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Customers
+        </a>
+    </div>
+</div>
+
+<!-- Customer Information -->
+<div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Customer Information
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%"><i class="fas fa-user me-2"></i>Full Name:</th>
+                        <td>{{ customer.name }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-phone me-2"></i>Phone Number:</th>
+                        <td>
+                            <a href="tel:+91{{ customer.phone }}" class="text-decoration-none">
+                                {{ format_phone(customer.phone) }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-calendar me-2"></i>Customer Since:</th>
+                        <td>{{ customer.created_date }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%"><i class="fas fa-rupee-sign me-2"></i>Total Spent:</th>
+                        <td class="fw-bold text-success">{{ format_rupees(customer.total_purchases) }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-shopping-cart me-2"></i>Total Items:</th>
+                        <td>{{ total_items }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-history me-2"></i>Last Purchase:</th>
+                        <td>{{ customer.last_purchase_date or 'No purchases yet' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="https://wa.me/91{{ customer.phone }}" 
+                       class="btn btn-success" target="_blank">
+                        <i class="fab fa-whatsapp me-1"></i>Message on WhatsApp
+                    </a>
+                    <a href="tel:+91{{ customer.phone }}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-phone me-1"></i>Call Customer
+                    </a>
+                    <a href="{{ url_for('add_entry') }}?phone={{ customer.phone }}&name={{ customer.name|urlencode }}" 
+                       class="btn btn-warning">
+                        <i class="fas fa-plus me-1"></i>New Sale
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase History -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history me-2"></i>
+                Purchase History ({{ purchases|length }} transactions)
+            </h5>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if purchases %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Item</th>
+                            <th class="text-end">Price (₹)</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Total (₹)</th>
+                            <th class="text-center">Bill Sent</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for purchase in purchases %}
+                        <tr>
+                            <td>{{ purchase.date }}</td>
+                            <td>{{ purchase.item_name }}</td>
+                            <td class="text-end">{{ format_rupees(purchase.price) }}</td>
+                            <td class="text-end">{{ purchase.quantity }}</td>
+                            <td class="text-end fw-bold">{{ format_rupees(purchase.total) }}</td>
+                            <td class="text-center">
+                                {% if purchase.bill_sent %}
+                                <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-warning">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('edit_entry', id=purchase.id) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button onclick="sendBulkWhatsApp('{{ purchase.date }}', '{{ purchase.phone_number }}')"
+                                            class="btn btn-outline-success">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-dark">
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Grand Total:</td>
+                            <td class="text-end fw-bold">{{ format_rupees(total_spent) }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No purchases recorded</h4>
+                <p class="text-muted">This customer hasn't made any purchases yet</p>
+                <a href="{{ url_for('add_entry') }}?phone={{ customer.phone }}&name={{ customer.name|urlencode }}" 
+                   class="btn btn-primary mt-2">
+                    <i class="fas fa-plus-circle me-1"></i>Add First Purchase
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Purchase Statistics -->
+{% if purchases %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    Total Transactions
+                </h5>
+                <h2 class="card-text">{{ purchases|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-boxes me-2"></i>
+                    Total Items
+                </h5>
+                <h2 class="card-text">{{ total_items }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-rupee-sign me-2"></i>
+                    Avg. Purchase
+                </h5>
+                <h2 class="card-text">{{ format_rupees(total_spent/purchases|length) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-calendar me-2"></i>
+                    First Purchase
+                </h5>
+                <h6 class="card-text">{{ purchases[-1].date if purchases else 'N/A' }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Purchases Chart (Simple) -->
+<div class="card mt-4 shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-chart-line me-2 text-primary"></i>
+            Purchase Timeline
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="timeline">
+            {% set recent_purchases = purchases|sort(attribute='date') %}
+            {% for purchase in recent_purchases %}
+            <div class="timeline-item">
+                <div class="timeline-date">{{ purchase.date }}</div>
+                <div class="timeline-content">
+                    <strong>{{ purchase.item_name }}</strong>
+                    <span class="badge bg-primary float-end">{{ format_rupees(purchase.total) }}</span>
+                    <p class="mb-0 text-muted small">{{ purchase.quantity }} pieces</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary-blue);
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    border: 3px solid white;
+}
+.timeline-date {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+.timeline-content {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border-left: 3px solid var(--primary-blue);
+}
+</style>
+{% endblock %}

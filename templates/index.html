@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-0">
+            <i class="fas fa-tshirt text-primary me-2"></i>
+            Textile Bazar Dashboard
+        </h1>
+        <p class="text-muted">Clothing Store Management System</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('add_entry') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-1"></i>New Sale
+        </a>
+        <a href="{{ url_for('generate_pdf', date=selected_date) }}" class="btn btn-danger">
+            <i class="fas fa-file-pdf me-1"></i>Export PDF
+        </a>
+    </div>
+</div>
+
+<!-- Date Selector -->
+<div class="card mb-4 shadow-sm border-primary">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>
+            Select Date
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('home') }}" class="row g-3">
+            <div class="col-md-6">
+                <label for="date" class="form-label">View sales for date:</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="date" 
+                       name="date" 
+                       value="{{ selected_date }}"
+                       required>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i>Load Sales
+                </button>
+                {% if available_dates %}
+                <div class="ms-3">
+                    <select class="form-select" onchange="if(this.value) window.location.href=this.value">
+                        <option value="">Quick Dates</option>
+                        {% for date in available_dates %}
+                        <option value="{{ url_for('home', date=date.date) }}" 
+                                {% if date.date == selected_date %}selected{% endif %}>
+                            {{ date.date }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Daily Summary -->
+<div class="alert alert-primary d-flex justify-content-between align-items-center shadow-sm">
+    <div>
+        <h4 class="alert-heading mb-0">
+            <i class="fas fa-file-invoice-dollar me-2"></i>
+            {{ selected_date }} - Sales Summary
+        </h4>
+        {% if today_stats %}
+        <p class="mb-0 mt-2">
+            <span class="badge bg-info me-2">{{ today_stats.total_customers }} Customers</span>
+            <span class="badge bg-warning me-2">{{ today_stats.total_transactions }} Transactions</span>
+            <span class="badge bg-success">{{ today_stats.total_items }} Items Sold</span>
+        </p>
+        {% endif %}
+    </div>
+    <div class="d-flex align-items-center">
+        <h3 class="mb-0 text-dark me-3">
+            <i class="fas fa-rupee-sign me-1"></i>{{ "%.2f"|format(daily_total) }}
+        </h3>
+    </div>
+</div>
+
+<!-- Search Customers -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-search me-2 text-primary"></i>
+            Search Customer History
+        </h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('search_customers') }}" method="GET" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" 
+                       class="form-control" 
+                       name="q" 
+                       placeholder="Search by customer name or phone number..."
+                       required>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="type">
+                    <option value="both">Name & Phone</option>
+                    <option value="name">Name Only</option>
+                    <option value="phone">Phone Only</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Sales Table -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list me-2"></i>
+                Sales for {{ selected_date }}
+            </h5>
+            <span class="badge bg-primary">
+                {{ items|length }} sale{% if items|length != 1 %}s{% endif %}
+            </span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if items %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Customer</th>
+                            <th>Phone</th>
+                            <th>Item</th>
+                            <th class="text-end">Price (₹)</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Total (₹)</th>
+                            <th class="text-center">Bill Sent</th>
+                            <th class="text-center">PDF</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <strong>{{ item['customer_name'] }}</strong>
+                            </td>
+                            <td>
+                                <a href="tel:+91{{ item['phone_number'] }}" class="text-decoration-none">
+                                    <i class="fas fa-phone me-1 text-muted"></i>
+                                    {{ format_phone(item['phone_number']) }}
+                                </a>
+                            </td>
+                            <td>{{ item['item_name'] }}</td>
+                            <td class="text-end">{{ format_rupees(item['price']) }}</td>
+                            <td class="text-end">{{ item['quantity'] }}</td>
+                            <td class="text-end fw-bold">{{ format_rupees(item['total']) }}</td>
+                            <td class="text-center">
+                                {% if item['bill_sent_status'] == 'Yes' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Yes
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-times me-1"></i>No
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item['pdf_generated_status'] == 'Yes' %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-file-pdf"></i>
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-file"></i>
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('edit_entry', id=item['id']) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('whatsapp_preview', id=item['id']) }}" 
+                                       class="btn btn-outline-info"
+                                       title="Preview WhatsApp Message">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('send_whatsapp_pdf', id=item['id']) }}" 
+                                       class="btn btn-outline-success"
+                                       title="Send PDF via WhatsApp"
+                                       onclick="return confirm('Generate and send PDF bill link to {{ item.customer_name }}?')">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                    <button onclick="sendBulkWhatsApp('{{ item['date'] }}', '{{ item['phone_number'] }}')"
+                                            class="btn btn-outline-warning"
+                                            title="Send All Today's Bills as PDF">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                    <a href="{{ url_for('delete_entry', id=item['id']) }}" 
+                                       class="btn btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this sale?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-dark">
+                        <tr>
+                            <td colspan="6" class="text-end fw-bold">Daily Total:</td>
+                            <td class="text-end fw-bold">{{ format_rupees(daily_total) }}</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-tshirt fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No sales recorded for this date</h4>
+                <p class="text-muted">Add sales using the "New Sale" button above</p>
+                <a href="{{ url_for('add_entry') }}" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus-circle me-1"></i>Add First Sale
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Stats -->
+{% if items %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-users me-2"></i>
+                    Total Customers
+                </h5>
+                <h2 class="card-text">{{ today_stats.total_customers if today_stats else 0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    Transactions
+                </h5>
+                <h2 class="card-text">{{ today_stats.total_transactions if today_stats else 0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-boxes me-2"></i>
+                    Items Sold
+                </h5>
+                <h2 class="card-text">{{ today_stats.total_items if today_stats else 0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-rupee-sign me-2"></i>
+                    Daily Revenue
+                </h5>
+                <h2 class="card-text">{{ format_rupees(daily_total) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function sendBulkWhatsApp(date, phone) {
+    if (confirm('Send PDF WhatsApp message for all items on ' + date + '?')) {
+        window.location.href = '/send_bulk_whatsapp/' + date + '/' + phone;
+    }
+}
+</script>
+{% endblock %}

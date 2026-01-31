@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Textile Bazar - {% block title %}{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        :root {
+            --primary-blue: #0066CC;
+            --light-blue: #E6F2FF;
+            --dark-blue: #004C99;
+            --pure-white: #FFFFFF;
+        }
+        
+        .bg-primary { background-color: var(--primary-blue) !important; }
+        .btn-primary { background-color: var(--primary-blue); border-color: var(--primary-blue); }
+        .btn-primary:hover { background-color: var(--dark-blue); border-color: var(--dark-blue); }
+        .text-primary { color: var(--primary-blue) !important; }
+        .border-primary { border-color: var(--primary-blue) !important; }
+    </style>
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-light">
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">
+            <i class="fas fa-tshirt me-2"></i>Textile Bazar
+        </a>
+        
+        <!-- User dropdown with logout -->
+        <div class="dropdown me-3">
+            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-user me-1"></i>
+                {% if session.get('full_name') %}
+                    {{ session.full_name }}
+                {% else %}
+                    Account
+                {% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {% if session.get('full_name') %}
+                    <li class="dropdown-item-text small text-muted">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ session.full_name }}
+                    </li>
+                    <li class="dropdown-item-text small text-muted">
+                        <i class="fas fa-user-tag me-1"></i>
+                        {{ session.role|capitalize }}
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('auth_profile') }}">
+                            <i class="fas fa-id-card me-2"></i>My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('auth_change_password') }}">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                {% endif %}
+                <li>
+                    <a class="dropdown-item text-danger" href="{{ url_for('auth_logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'home' }}" href="{{ url_for('home') }}">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'add_entry' }}" href="{{ url_for('add_entry') }}">
+                        <i class="fas fa-plus-circle me-1"></i>Add Sale
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'customers' }}" href="{{ url_for('customers') }}">
+                        <i class="fas fa-users me-1"></i>Customers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'stats' }}" href="{{ url_for('stats') }}">
+                        <i class="fas fa-chart-bar me-1"></i>Statistics
+                    </a>
+                </li>
+                <!-- NEW: Inventory Link -->
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('inventory') }}" href="{{ url_for('inventory') }}">
+                        <i class="fas fa-boxes me-1"></i>Inventory
+                    </a>
+                </li>
+            </ul>
+            
+            <form class="d-flex" action="{{ url_for('search') }}" method="GET">
+                <input class="form-control me-2" type="search" name="q" placeholder="Search items..." aria-label="Search">
+                <button class="btn btn-outline-light" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4 bg-white border-top">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-tshirt me-2"></i>Textile Bazar
+                    </h5>
+                    <p class="text-muted mb-0">
+                        Your trusted clothing store management system.
+                        Track sales, manage customers, and generate bills.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-rupee-sign me-1"></i>All amounts in Indian Rupees (₹)
+                    </p>
+                    <p class="text-muted mb-0">
+                        &copy; 2024 Textile Bazar. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- JavaScript for App -->
+    <script>
+        // WhatsApp sending function
+        function sendWhatsAppBill(itemId) {
+            fetch(`/send_whatsapp/${itemId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.open(data.whatsapp_url, '_blank');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                })
+                .catch(error => {
+                    alert('Error sending WhatsApp message: ' + error);
+                });
+        }
+        
+        function sendBulkWhatsApp(date, phone) {
+            window.open(`/send_bulk_whatsapp/${date}/${phone}`, '_blank');
+            setTimeout(() => location.reload(), 2000);
+        }
+        
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // Set today's date as default in date inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                if (!input.value) {
+                    input.value = new Date().toISOString().split('T')[0];
+                }
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

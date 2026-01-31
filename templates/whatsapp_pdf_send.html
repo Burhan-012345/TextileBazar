@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Send PDF via WhatsApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    Send PDF Bill via WhatsApp
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Success Message -->
+                <div class="alert alert-success mb-4">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>PDF Bill Generated Successfully!</strong>
+                    <p class="mb-0 mt-2">Your professional PDF bill is ready to be sent to {{ customer_name }}.</p>
+                </div>
+
+                <!-- Bill Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-user me-2"></i>
+                                    Customer Information
+                                </h5>
+                                <p class="mb-1"><strong>Name:</strong> {{ customer_name }}</p>
+                                <p class="mb-1"><strong>Phone:</strong> +91 {{ format_phone(phone_number) }}</p>
+                                <p class="mb-0"><strong>Bill No:</strong> {{ bill_number }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-rupee-sign me-2"></i>
+                                    Bill Summary
+                                </h5>
+                                <p class="mb-1"><strong>Total Amount:</strong> {{ format_rupees(total) }}</p>
+                                <p class="mb-1"><strong>Status:</strong> <span class="badge bg-success">PDF Ready</span></p>
+                                <p class="mb-0"><strong>Generated:</strong> {{ current_date }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Preview Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-file-pdf me-2"></i>
+                            PDF Bill Preview
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="pdf-preview mb-3">
+                            <i class="fas fa-file-pdf fa-5x text-danger mb-3"></i>
+                            <h5>{{ pdf_filename }}</h5>
+                            <p class="text-muted">Professional Textile Bazar Bill</p>
+                        </div>
+                        
+                        <!-- PDF Features -->
+                        <div class="row text-center mb-4">
+                            <div class="col-md-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-user-tie fa-2x text-primary mb-2"></i>
+                                    <p class="mb-0 small">Customer Details</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-list fa-2x text-success mb-2"></i>
+                                    <p class="mb-0 small">Itemized List</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-calculator fa-2x text-warning mb-2"></i>
+                                    <p class="mb-0 small">Payment Summary</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="feature-item">
+                                    <i class="fas fa-store fa-2x text-info mb-2"></i>
+                                    <p class="mb-0 small">Store Branding</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Send Options
+                        </h5>
+                        
+                        <div class="row g-3">
+                            <!-- Download PDF -->
+                            <div class="col-md-6">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-download fa-3x text-primary mb-3"></i>
+                                        <h5>Download PDF</h5>
+                                        <p class="text-muted small">Save the bill to your computer first</p>
+                                        <a href="{{ url_for('download_pdf', filename=pdf_filename) }}" 
+                                           class="btn btn-primary w-100">
+                                            <i class="fas fa-download me-1"></i>Download PDF
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Send via WhatsApp -->
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fab fa-whatsapp fa-3x text-success mb-3"></i>
+                                        <h5>Send via WhatsApp</h5>
+                                        <p class="text-muted small">Open WhatsApp with download link</p>
+                                        <a href="{{ whatsapp_url }}" 
+                                           target="_blank" 
+                                           class="btn btn-success w-100">
+                                            <i class="fab fa-whatsapp me-1"></i>Open WhatsApp
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="alert alert-info mt-4">
+                            <h6><i class="fas fa-info-circle me-2"></i>How to send PDF via WhatsApp:</h6>
+                            <ol class="mb-0">
+                                <li>Download the PDF to your computer</li>
+                                <li>Open WhatsApp Web or your phone</li>
+                                <li>Click "Open WhatsApp" button above</li>
+                                <li>Attach the downloaded PDF file</li>
+                                <li>Send to {{ customer_name }}</li>
+                            </ol>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            </a>
+                            <a href="{{ url_for('send_whatsapp', id=request.args.get('id', '')) if request.args.get('id') else '#' }}" 
+                               class="btn btn-outline-success">
+                                <i class="fab fa-whatsapp me-1"></i>Send Text Only
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pdf-preview {
+    padding: 30px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    border: 2px dashed #0066CC;
+}
+
+.feature-item {
+    padding: 15px;
+    border-radius: 8px;
+    background: white;
+    transition: transform 0.3s;
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.card {
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.bg-success {
+    background-color: #25D366 !important;
+}
+</style>
+
+<script>
+// Auto-download after 2 seconds (optional)
+setTimeout(function() {
+    if (confirm('Would you like to automatically download the PDF bill?')) {
+        window.open("{{ url_for('download_pdf', filename=pdf_filename) }}", '_blank');
+    }
+}, 2000);
+</script>
+{% endblock %}

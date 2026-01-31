@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Textile Bazar">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0066CC">
+    <meta name="description" content="Textile Bazar - Clothing Store Management System with PWA support">
+    <meta name="keywords" content="textile, clothing, store, management, billing, pwa">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/icon-16x16.png') }}">
+    
+    <title>Textile Bazar - Clothing Store Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #004c99;
+            --accent-color: #00a8ff;
+            --light-blue: #e6f2ff;
+            --dark-blue: #003366;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* PWA Install Button Styles */
+        #pwaInstallBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+            animation: pulse 2s infinite;
+            display: none;
+            border: none;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #pwaInstallBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 102, 204, 0.4);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 16px rgba(0, 102, 204, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3); }
+        }
+        
+        .pwa-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 9999;
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            max-width: 400px;
+            width: 90%;
+            opacity: 0;
+            transition: all 0.4s ease;
+            display: none;
+        }
+        
+        .pwa-prompt.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            display: block;
+        }
+        
+        .pwa-prompt .prompt-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-right: 15px;
+        }
+        
+        .pwa-prompt .instructions {
+            background: var(--light-blue);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .pwa-prompt .instructions.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hero-section {
+            background: linear-gradient(rgba(0, 51, 102, 0.8), rgba(0, 102, 204, 0.8)), url('https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 0;
+            border-radius: 0 0 50px 50px;
+            margin-bottom: 50px;
+        }
+        
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        
+        .feature-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 102, 204, 0.3);
+            color: white;
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .testimonial-card::before {
+            content: '"';
+            font-size: 120px;
+            color: var(--light-blue);
+            position: absolute;
+            top: -30px;
+            left: 20px;
+            font-family: Georgia, serif;
+        }
+        
+        .footer {
+            background: var(--dark-blue);
+            color: white;
+            padding: 60px 0 30px;
+            margin-top: 100px;
+        }
+        
+        .cta-section {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 30px;
+            padding: 60px 40px;
+            margin: 50px 0;
+        }
+        
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .screenshot-img {
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .screenshot-img:hover {
+            transform: scale(1.02);
+        }
+        
+        /* Installation Badge */
+        .install-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        /* App Features List */
+        .app-features {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .app-features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .app-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .app-features li i {
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating PWA Install Button -->
+    <button id="pwaInstallBtn" class="btn btn-primary btn-lg d-flex align-items-center justify-content-center" title="Install App">
+        <i class="fas fa-download"></i>
+    </button>
+    
+    <!-- PWA Install Prompt -->
+    <div id="pwaPrompt" class="pwa-prompt">
+        <div class="d-flex align-items-start">
+            <div class="prompt-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1 fw-bold" id="promptTitle">Install Textile Bazar</h6>
+                <p class="mb-2 small text-muted" id="promptMessage">Get the app-like experience with offline access</p>
+                
+                <div id="installInstructions" class="instructions">
+                    <p class="small mb-1"><i class="fas fa-info-circle text-primary me-1"></i> <strong>What you get:</strong></p>
+                    <ul class="small mb-2 app-features">
+                        <li><i class="fas fa-check text-success"></i> Works offline</li>
+                        <li><i class="fas fa-check text-success"></i> Home screen icon</li>
+                        <li><i class="fas fa-check text-success"></i> App-like experience</li>
+                        <li><i class="fas fa-check text-success"></i> Faster loading</li>
+                    </ul>
+                </div>
+                
+                <div class="d-flex gap-2 mt-3">
+                    <button id="promptInstallButton" class="btn btn-primary flex-grow-1">
+                        <i class="fas fa-download me-1"></i>
+                        <span id="installButtonText">Install App</span>
+                    </button>
+                    <button id="dismissPrompt" class="btn btn-outline-secondary">
+                        Later
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(0, 51, 102, 0.95);">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-tshirt me-2"></i>
+                <strong>Textile Bazar</strong>
+            </a>
+            <div class="d-flex align-items-center">
+                <!-- Install App Button in Navbar -->
+                <button id="mobileInstallButton" class="btn btn-sm btn-light me-2 d-none">
+                    <i class="fas fa-download me-1"></i>Install App
+                </button>
+            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testimonials">Testimonials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item ms-2">
+                        <a href="/auth/login" class="btn btn-outline-light">Login</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a href="/auth/register" class="btn btn-light btn-primary-custom">Get Started</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">Revolutionize Your Clothing Store Management</h1>
+                    <p class="lead mb-4">Streamline sales, manage customers, generate professional bills, and boost your textile business with our all-in-one management solution.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="/auth/register" class="btn btn-light btn-lg btn-primary-custom">
+                            <i class="fas fa-rocket me-2"></i>Start Free Trial
+                        </a>
+                        <a href="#features" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-play-circle me-2"></i>See Demo
+                        </a>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-light me-3"><i class="fas fa-check-circle text-success me-1"></i> No credit card required</span>
+                        <span class="text-light"><i class="fas fa-check-circle text-success me-1"></i> 30-day free trial</span>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="position-relative">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                             alt="Textile Store Dashboard" class="img-fluid rounded-3 shadow-lg screenshot-img">
+                        <div class="install-badge">
+                            <i class="fas fa-download me-1"></i> Installable App
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="container mb-5">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="stats-card animate-on-scroll">
+                    <h3 class="display-6 fw-bold text-primary">500+</h3>
+                    <p class="text-muted">Stores Using</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stats-card animate-on-scroll">
+                    <h3 class="display-6 fw-bold text-primary">50K+</h3>
+                    <p class="text-muted">Bills Generated</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stats-card animate-on-scroll">
+                    <h3 class="display-6 fw-bold text-primary">₹10M+</h3>
+                    <p class="text-muted">Revenue Managed</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stats-card animate-on-scroll">
+                    <h3 class="display-6 fw-bold text-primary">24/7</h3>
+                    <p class="text-muted">Support</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Powerful Features for Your Textile Business</h2>
+            <p class="lead text-muted">Everything you need to manage your clothing store efficiently</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <h4 class="fw-bold">Sales Management</h4>
+                        <p class="text-muted">Easily record sales, manage inventory, and track daily transactions with our intuitive interface.</p>
+                        <ul class="list-unstyled text-start">
+                            <li><i class="fas fa-check text-success me-2"></i> Quick sales entry</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Real-time inventory</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Daily reports</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4 class="fw-bold">Customer Management</h4>
+                        <p class="text-muted">Maintain complete customer profiles, purchase history, and loyalty tracking.</p>
+                        <ul class="list-unstyled text-start">
+                            <li><i class="fas fa-check text-success me-2"></i> Customer profiles</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Purchase history</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Smart search</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <h4 class="fw-bold">Professional Billing</h4>
+                        <p class="text-muted">Generate professional bills with your store branding and share via WhatsApp instantly.</p>
+                        <ul class="list-unstyled text-start">
+                            <li><i class="fas fa-check text-success me-2"></i> PDF bills</li>
+                            <li><i class="fas fa-check text-success me-2"></i> WhatsApp sharing</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Custom templates</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 class="fw-bold">Analytics & Reports</h4>
+                        <p class="text-muted">Get detailed insights into your business performance with comprehensive analytics.</p>
+                        <ul class="list-unstyled text-start">
+                            <li><i class="fas fa-check text-success me-2"></i> Sales analytics</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Customer reports</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Inventory reports</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4 class="fw-bold">Mobile App Experience</h4>
+                        <p class="text-muted">Install as a PWA for app-like experience, offline access, and home screen convenience.</p>
+                        <ul class="list-unstyled text-start">
+                            <li><i class="fas fa-check text-success me-2"></i> Installable PWA</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Offline access</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Push notifications</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="fw-bold">Secure & Reliable</h4>
+                        <p class="text-muted">Your data is protected with enterprise-grade security and regular backups.</p>
+                        <ul class="list-unstyled text-start">
+                            <li><i class="fas fa-check text-success me-2"></i> Data encryption</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Regular backups</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Role-based access</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="container py-5 bg-light rounded-4 my-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+            <p class="lead text-muted">Get started in 4 simple steps</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center animate-on-scroll">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">1</div>
+                    <h4 class="mt-3 fw-bold">Sign Up</h4>
+                    <p>Create your free account in 30 seconds. No credit card required.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center animate-on-scroll">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">2</div>
+                    <h4 class="mt-3 fw-bold">Set Up Store</h4>
+                    <p>Add your products, set prices, and customize your store settings.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center animate-on-scroll">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">3</div>
+                    <h4 class="mt-3 fw-bold">Start Selling</h4>
+                    <p>Record sales, manage customers, and generate bills instantly.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center animate-on-scroll">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">4</div>
+                    <h4 class="mt-3 fw-bold">Install App</h4>
+                    <p>Install as a PWA for better mobile experience and offline access.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-5">
+            <button id="showInstallGuide" class="btn btn-outline-primary btn-lg me-3">
+                <i class="fas fa-mobile-alt me-2"></i>How to Install App
+            </button>
+            <a href="/auth/register" class="btn btn-primary btn-lg btn-primary-custom px-5">
+                <i class="fas fa-play me-2"></i>Start Your Journey
+            </a>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">What Store Owners Say</h2>
+            <p class="lead text-muted">Trusted by 500+ clothing stores across India</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-3" width="60" alt="User">
+                        <div>
+                            <h5 class="fw-bold mb-0">Rajesh Kumar</h5>
+                            <p class="text-muted mb-0">Fashion Paradise, Delhi</p>
+                        </div>
+                    </div>
+                    <p class="mb-0">"Textile Bazar transformed our store management. The WhatsApp bill sharing feature alone has saved us hours every week!"</p>
+                    <div class="text-warning mt-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" class="rounded-circle me-3" width="60" alt="User">
+                        <div>
+                            <h5 class="fw-bold mb-0">Priya Sharma</h5>
+                            <p class="text-muted mb-0">Style Hub, Mumbai</p>
+                        </div>
+                    </div>
+                    <p class="mb-0">"Customer management has never been easier. We can now track repeat customers and offer personalized service."</p>
+                    <div class="text-warning mt-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://randomuser.me/api/portraits/men/67.jpg" class="rounded-circle me-3" width="60" alt="User">
+                        <div>
+                            <h5 class="fw-bold mb-0">Amit Patel</h5>
+                            <p class="text-muted mb-0">Urban Textiles, Ahmedabad</p>
+                        </div>
+                    </div>
+                    <p class="mb-0">"The app-like experience on mobile is fantastic. My staff can use it on their phones even without internet!"</p>
+                    <div class="text-warning mt-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <div class="container">
+        <div class="cta-section animate-on-scroll">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h2 class="fw-bold mb-3">Ready to Transform Your Textile Business?</h2>
+                    <p class="mb-0">Join 500+ successful store owners who are already growing their business with Textile Bazar.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end text-center mt-lg-0 mt-4">
+                    <a href="/auth/register" class="btn btn-light btn-lg btn-primary-custom px-5">
+                        Get Started Free <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h3 class="fw-bold mb-3"><i class="fas fa-tshirt me-2"></i>Textile Bazar</h3>
+                    <p>Your all-in-one solution for clothing store management. Streamline operations, boost sales, and grow your textile business.</p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="#" class="text-white"><i class="fab fa-facebook-f fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin-in fa-lg"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">Product</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#features" class="text-white-50 text-decoration-none">Features</a></li>
+                        <li><a href="#how-it-works" class="text-white-50 text-decoration-none">How It Works</a></li>
+                        <li><a href="/auth/login" class="text-white-50 text-decoration-none">Login</a></li>
+                        <li><a href="/auth/register" class="text-white-50 text-decoration-none">Sign Up</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">Company</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">About Us</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Blog</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Careers</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold mb-3" id="contact">Contact Us</h5>
+                    <p class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 123 Business Street, Mumbai, India</p>
+                    <p class="mb-2"><i class="fas fa-phone me-2"></i> +91 98765 43210</p>
+                    <p class="mb-0"><i class="fas fa-envelope me-2"></i> support@textilebazar.com</p>
+                </div>
+            </div>
+            
+            <hr class="bg-white my-4">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2024 Textile Bazar. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white-50 text-decoration-none me-3">Privacy Policy</a>
+                    <a href="#" class="text-white-50 text-decoration-none">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // PWA Variables
+        let deferredPrompt = null;
+        let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        let isAndroid = /Android/.test(navigator.userAgent);
+        let isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          window.navigator.standalone === true;
+        
+        // Check if app is installed/standalone
+        function isAppInstalled() {
+            // Check display mode first (most reliable)
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                return true;
+            }
+            
+            // Check for fullscreen mode
+            if (window.matchMedia('(display-mode: fullscreen)').matches) {
+                return true;
+            }
+            
+            // iOS specific check
+            if (isIOS) {
+                return window.navigator.standalone === true;
+            }
+            
+            // Check if launched from home screen
+            if (window.navigator.standalone) {
+                return true;
+            }
+            
+            // Check for reduced UI
+            if (window.matchMedia('(display-mode: minimal-ui)').matches) {
+                return true;
+            }
+            
+            // Additional checks
+            if (window.matchMedia('(display-mode: browser)').matches) {
+                return false;
+            }
+            
+            // Check if standalone mode is forced
+            if ('standalone' in navigator && navigator.standalone) {
+                return true;
+            }
+            
+            // Check referrer for direct launch
+            if (document.referrer.includes('android-app://')) {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Show platform-specific installation instructions
+        function showPlatformSpecificInstructions() {
+            let title = '';
+            let message = '';
+            let buttonText = '';
+            let showInstructions = true;
+            
+            if (isAndroid) {
+                title = 'Install Textile Bazar App';
+                message = 'Get the Android app experience with offline access and home screen convenience.';
+                buttonText = 'Install Now';
+            } else if (isIOS) {
+                title = 'Add to Home Screen';
+                message = 'Add Textile Bazar to your home screen for quick access and app-like experience.';
+                buttonText = 'Add to Home Screen';
+            } else {
+                title = 'Install Textile Bazar';
+                message = 'Install as a desktop app for better experience and quick access.';
+                buttonText = 'Install App';
+            }
+            
+            // Update UI elements
+            document.getElementById('promptTitle').textContent = title;
+            document.getElementById('promptMessage').textContent = message;
+            document.getElementById('installButtonText').textContent = buttonText;
+            
+            // Show additional instructions
+            const instructions = document.getElementById('installInstructions');
+            if (showInstructions) {
+                instructions.classList.add('show');
+            }
+            
+            // Show the prompt
+            const prompt = document.getElementById('pwaPrompt');
+            prompt.classList.add('show');
+            prompt.style.display = 'block';
+            
+            // Store that we showed the prompt
+            localStorage.setItem('pwaPromptShown', Date.now().toString());
+        }
+        
+        // Improved install function with better messaging
+        async function installPWA() {
+            console.log('📱 Install PWA function called');
+            
+            // If already installed, show message
+            if (isAppInstalled()) {
+                alert('✅ Textile Bazar is already installed!\n\nYou can find it on your home screen or app drawer.');
+                hideAllInstallButtons();
+                return;
+            }
+            
+            // If we have deferredPrompt (Chrome/Android)
+            if (deferredPrompt) {
+                console.log('📱 Showing browser install prompt');
+                
+                // Show the prompt
+                deferredPrompt.prompt();
+                
+                // Wait for user to respond
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`📱 User response: ${outcome}`);
+                
+                // Clear the deferredPrompt
+                deferredPrompt = null;
+                
+                if (outcome === 'accepted') {
+                    console.log('✅ User accepted install');
+                    
+                    // Hide all install buttons
+                    hideAllInstallButtons();
+                    
+                    // Show success message after a delay
+                    setTimeout(() => {
+                        const successMsg = isAndroid ? 
+                            '✅ Textile Bazar has been installed!\n\nLook for it on your home screen or app drawer.' :
+                            '✅ Textile Bazar has been added to your home screen!\n\nYou can now open it like a regular app.';
+                        alert(successMsg);
+                    }, 1000);
+                    
+                } else {
+                    console.log('❌ User dismissed install');
+                    
+                    // Show manual instructions
+                    setTimeout(() => {
+                        showPlatformSpecificInstructions();
+                    }, 500);
+                }
+                
+            } else {
+                console.log('📱 No deferred prompt available');
+                
+                // Show manual installation instructions
+                showPlatformSpecificInstructions();
+            }
+        }
+        
+        // Hide all install buttons
+        function hideAllInstallButtons() {
+            const floatingBtn = document.getElementById('pwaInstallBtn');
+            const mobileBtn = document.getElementById('mobileInstallButton');
+            const prompt = document.getElementById('pwaPrompt');
+            
+            if (floatingBtn) {
+                floatingBtn.style.display = 'none';
+                floatingBtn.style.opacity = '0';
+            }
+            if (mobileBtn) {
+                mobileBtn.style.display = 'none';
+                mobileBtn.classList.add('d-none');
+            }
+            if (prompt) {
+                prompt.classList.remove('show');
+                setTimeout(() => {
+                    prompt.style.display = 'none';
+                }, 300);
+            }
+        }
+        
+        // Show all install buttons (only if not installed)
+        function showAllInstallButtons() {
+            if (isAppInstalled()) {
+                hideAllInstallButtons();
+                return;
+            }
+            
+            const floatingBtn = document.getElementById('pwaInstallBtn');
+            const mobileBtn = document.getElementById('mobileInstallButton');
+            
+            // Check if prompt was dismissed recently (within 7 days)
+            const dismissalTime = localStorage.getItem('pwaPromptDismissed');
+            const weekInMs = 7 * 24 * 60 * 60 * 1000;
+            
+            if (dismissalTime && (Date.now() - parseInt(dismissalTime)) < weekInMs) {
+                // Don't show prompt if dismissed recently
+                console.log('Prompt was dismissed recently, not showing automatically');
+            } else {
+                // Show buttons
+                if (floatingBtn) {
+                    floatingBtn.style.display = 'flex';
+                    floatingBtn.style.opacity = '1';
+                }
+                
+                if (mobileBtn) {
+                    mobileBtn.classList.remove('d-none');
+                    mobileBtn.style.display = 'inline-block';
+                }
+            }
+        }
+        
+        // Check if app should show install prompt
+        function shouldShowInstallPrompt() {
+            if (isAppInstalled()) return false;
+            
+            // Don't show if dismissed recently
+            const dismissalTime = localStorage.getItem('pwaPromptDismissed');
+            const weekInMs = 7 * 24 * 60 * 60 * 1000;
+            if (dismissalTime && (Date.now() - parseInt(dismissalTime)) < weekInMs) {
+                return false;
+            }
+            
+            // Only show on mobile devices
+            const isMobile = isIOS || isAndroid || 
+                           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            return isMobile && deferredPrompt;
+        }
+        
+        // Handle manual install guide request
+        document.getElementById('showInstallGuide')?.addEventListener('click', function() {
+            showPlatformSpecificInstructions();
+            
+            // Scroll to prompt
+            setTimeout(() => {
+                document.getElementById('pwaPrompt').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 100);
+        });
+        
+        // Initialize PWA
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing PWA');
+            console.log('Device info:', {
+                isIOS: isIOS,
+                isAndroid: isAndroid,
+                isStandalone: isStandalone,
+                userAgent: navigator.userAgent
+            });
+            
+            // Check if already installed
+            if (isAppInstalled()) {
+                console.log('✅ App is already installed');
+                hideAllInstallButtons();
+                
+                // Show a subtle indicator
+                const navBrand = document.querySelector('.navbar-brand');
+                if (navBrand) {
+                    navBrand.innerHTML += ' <span class="badge bg-success">App</span>';
+                }
+                return;
+            }
+            
+            // Handle PWA install prompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('🎯 beforeinstallprompt event fired');
+                
+                // Prevent Chrome 67 and earlier from automatically showing the prompt
+                e.preventDefault();
+                
+                // Stash the event so it can be triggered later
+                deferredPrompt = e;
+                console.log('✅ Deferred prompt saved');
+                
+                // Show install buttons
+                showAllInstallButtons();
+                
+                // Show prompt after delay if conditions are met
+                if (shouldShowInstallPrompt()) {
+                    console.log('📱 Showing install prompt after delay');
+                    setTimeout(() => {
+                        showPlatformSpecificInstructions();
+                    }, 3000);
+                }
+            });
+            
+            // Handle appinstalled event
+            window.addEventListener('appinstalled', (evt) => {
+                console.log('✅ App was installed');
+                hideAllInstallButtons();
+                deferredPrompt = null;
+                
+                // Update UI to show app is installed
+                const navBrand = document.querySelector('.navbar-brand');
+                if (navBrand) {
+                    navBrand.innerHTML += ' <span class="badge bg-success">App</span>';
+                }
+            });
+            
+            // Event listeners for install buttons
+            document.getElementById('pwaInstallBtn')?.addEventListener('click', installPWA);
+            document.getElementById('mobileInstallButton')?.addEventListener('click', installPWA);
+            document.getElementById('promptInstallButton')?.addEventListener('click', installPWA);
+            document.getElementById('dismissPrompt')?.addEventListener('click', function() {
+                // Store dismissal time
+                localStorage.setItem('pwaPromptDismissed', Date.now().toString());
+                hideAllInstallButtons();
+            });
+            
+            // Show buttons on load if conditions are met
+            setTimeout(() => {
+                showAllInstallButtons();
+            }, 1000);
+            
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                console.log('🔧 Service Worker supported');
+                
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(registration => {
+                            console.log('✅ Service Worker registered with scope:', registration.scope);
+                            
+                            // Check for updates
+                            registration.addEventListener('updatefound', () => {
+                                const newWorker = registration.installing;
+                                console.log('🔄 New Service Worker found:', newWorker.state);
+                                
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        console.log('🔄 New update available');
+                                        // Show update notification
+                                        showUpdateNotification();
+                                    }
+                                });
+                            });
+                            
+                            // Check if update is needed
+                            if (registration.waiting) {
+                                console.log('🔄 Update waiting to be activated');
+                                showUpdateNotification();
+                            }
+                        })
+                        .catch(error => {
+                            console.log('❌ Service Worker registration failed:', error);
+                        });
+                });
+            } else {
+                console.log('❌ Service Worker not supported');
+            }
+            
+            // Show update notification
+            function showUpdateNotification() {
+                if (confirm('A new version of Textile Bazar is available. Update now?')) {
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+                        location.reload();
+                    }
+                }
+            }
+            
+            // Original intro page JavaScript
+            // Animation on scroll
+            function animateOnScroll() {
+                const elements = document.querySelectorAll('.animate-on-scroll');
+                elements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    if (elementTop < windowHeight - 100) {
+                        element.classList.add('visible');
+                    }
+                });
+            }
+            
+            // Initial animation check
+            animateOnScroll();
+            
+            // Check on scroll
+            window.addEventListener('scroll', animateOnScroll);
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+            
+            // Log PWA status
+            console.log('📊 PWA Status:', {
+                installed: isAppInstalled(),
+                iOS: isIOS,
+                android: isAndroid,
+                deferredPrompt: !!deferredPrompt,
+                standalone: window.matchMedia('(display-mode: standalone)').matches,
+                displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 
+                           window.matchMedia('(display-mode: browser)').matches ? 'browser' : 'unknown'
+            });
+        });
+        
+        // Handle visibility change (when user switches tabs/apps)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // User returned to the tab, check if app was installed
+                if (isAppInstalled()) {
+                    hideAllInstallButtons();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}WhatsApp Preview{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fab fa-whatsapp me-2"></i>
+                    WhatsApp Message Preview
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Customer Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-user me-2"></i>
+                                    Customer Details
+                                </h5>
+                                <p class="mb-1"><strong>Name:</strong> {{ customer_name }}</p>
+                                <p class="mb-1"><strong>Phone:</strong> +91 {{ format_phone(phone_number) }}</p>
+                                <p class="mb-0"><strong>Date:</strong> {{ date }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-file-invoice me-2"></i>
+                                    Bill Information
+                                </h5>
+                                <p class="mb-1"><strong>Bill No:</strong> {{ bill_number }}</p>
+                                <p class="mb-1"><strong>Total Items:</strong> {{ items|length }}</p>
+                                <p class="mb-0"><strong>Total Amount:</strong> {{ format_rupees(total) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Message Preview -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fab fa-whatsapp me-2"></i>
+                            Message Preview
+                        </h5>
+                    </div>
+                    <div class="card-body bg-light">
+                        <div class="whatsapp-preview">
+                            <div class="whatsapp-header bg-success text-white p-3 rounded-top">
+                                <i class="fab fa-whatsapp fa-2x me-2"></i>
+                                <strong>WhatsApp Message</strong>
+                                <span class="float-end">Now</span>
+                            </div>
+                            <div class="whatsapp-body p-3">
+                                <div class="message-bubble bg-white p-3 rounded shadow-sm mb-3">
+                                    <pre style="white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; margin: 0; font-size: 14px; line-height: 1.5;">{{ whatsapp_message }}</pre>
+                                </div>
+                                <div class="text-muted small mt-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    This is how the message will appear in WhatsApp
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items List -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Items in Bill
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Item Name</th>
+                                        <th class="text-end">Price (₹)</th>
+                                        <th class="text-end">Qty</th>
+                                        <th class="text-end">Total (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ item.item_name }}</td>
+                                        <td class="text-end">{{ format_rupees(item.price) }}</td>
+                                        <td class="text-end">{{ item.quantity }}</td>
+                                        <td class="text-end fw-bold">{{ format_rupees(item.total) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-bold">Grand Total:</td>
+                                        <td class="text-end fw-bold">{{ format_rupees(total) }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <a href="{{ url_for('home') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+<a href="{{ url_for('send_whatsapp_pdf', id=request.args.get('id', '')) if request.args.get('id') else '#' }}" 
+                                   class="btn btn-primary w-100">
+                                    <i class="fas fa-file-pdf me-1"></i>Send PDF Bill
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('send_whatsapp', id=request.args.get('id', '')) if request.args.get('id') else '#' }}" 
+                                   class="btn btn-success w-100">
+                                    <i class="fab fa-whatsapp me-1"></i>Send WhatsApp Message
+                                </a>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <p class="text-muted small mb-0">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Clicking "Send WhatsApp Message" will open WhatsApp with the pre-filled message.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.whatsapp-preview {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.whatsapp-header {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+}
+
+.message-bubble {
+    border: 1px solid #e0e0e0;
+    position: relative;
+    max-width: 80%;
+}
+
+.message-bubble:after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 15px;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-right-color: white;
+}
+
+.bg-success {
+    background-color: #25D366 !important;
+}
+</style>
+{% endblock %}

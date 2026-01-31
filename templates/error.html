@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if error_code %}{{ error_code }} - {% endif %}Error - Textile Bazar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    <style>
+        /* Error Page Specific Styles */
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5faff 0%, #e6f2ff 100%);
+        }
+
+        .error-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 102, 204, 0.15);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #e6f2ff;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .error-icon {
+            font-size: 5rem;
+            color: #0066CC;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        .error-title {
+            color: #0066CC;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .error-subtitle {
+            color: #004C99;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .error-code {
+            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.2);
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn-error {
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary-error {
+            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            color: white;
+        }
+
+        .btn-primary-error:hover {
+            background: linear-gradient(135deg, #004C99 0%, #003366 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 102, 204, 0.2);
+        }
+
+        .btn-secondary-error {
+            background: #f8f9fa;
+            color: #0066CC;
+            border: 2px solid #0066CC;
+        }
+
+        .btn-secondary-error:hover {
+            background: #e6f2ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 102, 204, 0.1);
+        }
+
+        .error-details {
+            background: #f8f9fa;
+            border-left: 4px solid #0066CC;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .error-details h4 {
+            color: #0066CC;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .error-details p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+
+        .error-help {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e6f2ff;
+        }
+
+        .error-help h4 {
+            color: #004C99;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .error-help ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .error-help li {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-help li i {
+            color: #0066CC;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .error-card {
+                padding: 30px 20px;
+            }
+
+            .error-icon {
+                font-size: 4rem;
+            }
+
+            .error-title {
+                font-size: 2rem;
+            }
+
+            .error-subtitle {
+                font-size: 1rem;
+            }
+
+            .error-actions {
+                flex-direction: column;
+            }
+
+            .btn-error {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* 404 Specific */
+        .error-404 .error-icon {
+            color: #28a745;
+        }
+
+        .error-404 .error-code {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        /* 500 Specific */
+        .error-500 .error-icon {
+            color: #dc3545;
+        }
+
+        .error-500 .error-code {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        /* 403 Specific */
+        .error-403 .error-icon {
+            color: #ffc107;
+        }
+
+        .error-403 .error-code {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        }
+
+        /* 400 Specific */
+        .error-400 .error-icon {
+            color: #17a2b8;
+        }
+
+        .error-400 .error-code {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-card {% if error_code %}error-{{ error_code }}{% endif %}">
+            <!-- Error Icon -->
+            <div class="error-icon">
+                {% if error_code == 404 %}
+                    <i class="fas fa-map-signs"></i>
+                {% elif error_code == 500 %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                {% elif error_code == 403 %}
+                    <i class="fas fa-lock"></i>
+                {% elif error_code == 400 %}
+                    <i class="fas fa-exclamation-circle"></i>
+                {% else %}
+                    <i class="fas fa-exclamation"></i>
+                {% endif %}
+            </div>
+
+            <!-- Error Code -->
+            {% if error_code %}
+                <div class="error-code">
+                    {{ error_code }}
+                </div>
+            {% endif %}
+
+            <!-- Error Title -->
+            <h1 class="error-title">
+                {% if error_code == 404 %}
+                    Page Not Found
+                {% elif error_code == 500 %}
+                    Server Error
+                {% elif error_code == 403 %}
+                    Access Denied
+                {% elif error_code == 400 %}
+                    Bad Request
+                {% else %}
+                    Oops! Something went wrong
+                {% endif %}
+            </h1>
+
+            <!-- Error Subtitle -->
+            <p class="error-subtitle">
+                {% if error_code == 404 %}
+                    The page you're looking for doesn't exist or has been moved.
+                {% elif error_code == 500 %}
+                    Something went wrong on our servers. We're working to fix it.
+                {% elif error_code == 403 %}
+                    You don't have permission to access this page.
+                {% elif error_code == 400 %}
+                    Your request contains invalid data.
+                {% else %}
+                    An unexpected error has occurred.
+                {% endif %}
+            </p>
+
+            <!-- Error Message -->
+            {% if error_message %}
+                <div class="error-message">
+                    <p>{{ error_message }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Error Details (for debugging) -->
+            {% if session and session.logged_in and error_code == 500 %}
+                <div class="error-details">
+                    <h4><i class="fas fa-bug"></i> Technical Details (for administrators):</h4>
+                    <p><strong>Error Code:</strong> {{ error_code }}</p>
+                    <p><strong>Timestamp:</strong> {{ current_date }}</p>
+                    <p><strong>User:</strong> {{ session.username }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Action Buttons - Using direct paths instead of url_for to avoid authentication issues -->
+            <div class="error-actions">
+                <a href="/" class="btn-error btn-primary-error">
+                    <i class="fas fa-home"></i> Go to Homepage
+                </a>
+                
+                {% if error_code == 404 %}
+                    <a href="javascript:history.back()" class="btn-error btn-secondary-error">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </a>
+                {% endif %}
+                
+                {% if session and session.logged_in %}
+                    <!-- Use direct path /add instead of url_for('add') to avoid auth conflicts -->
+                    <a href="/add" class="btn-error btn-secondary-error">
+                        <i class="fas fa-plus"></i> Add New Entry
+                    </a>
+                {% else %}
+                    <a href="/auth/login" class="btn-error btn-secondary-error">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Help Section -->
+            <div class="error-help">
+                <h4><i class="fas fa-life-ring"></i> Need Help?</h4>
+                <ul>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Check the URL for typos
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Clear your browser cache
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Try refreshing the page
+                    </li>
+                    {% if error_code == 500 %}
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        Contact support if the problem persists
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Brand Footer -->
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e6f2ff;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                    <i class="fas fa-tshirt" style="color: #0066CC; font-size: 1.5rem;"></i>
+                    <h3 style="color: #0066CC; margin: 0; font-size: 1.2rem;">Textile Bazar</h3>
+                </div>
+                <p style="color: #666; font-size: 0.85rem; margin: 0;">
+                    Your Trusted Clothing Store • © {{ current_year }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click animation to buttons
+            const buttons = document.querySelectorAll('.btn-error');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Create ripple effect
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        border-radius: 50%;
+                        background: rgba(255, 255, 255, 0.7);
+                        transform: scale(0);
+                        animation: ripple-animation 0.6s linear;
+                        width: ${size}px;
+                        height: ${size}px;
+                        top: ${y}px;
+                        left: ${x}px;
+                    `;
+                    
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    
+                    // Remove ripple after animation
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+
+            // Add CSS for ripple animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes ripple-animation {
+                    to {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>

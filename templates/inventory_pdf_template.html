@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Report - Textile Bazar</title>
+    <style>
+        /* PDF Export Styles - Optimized for Print/PDF */
+        :root {
+            --primary-blue: #0066CC;
+            --dark-blue: #004C99;
+            --success-green: #28a745;
+            --warning-orange: #ffc107;
+            --danger-red: #dc3545;
+            --light-gray: #f8f9fa;
+            --border-gray: #dee2e6;
+            --text-dark: #212529;
+            --text-muted: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: white;
+            padding: 20px;
+            font-size: 12px;
+        }
+        
+        /* Header Styles */
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary-blue);
+        }
+        
+        .pdf-header h1 {
+            color: var(--primary-blue);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .pdf-header .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .pdf-header .meta-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+        
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            background-color: var(--light-gray);
+            page-break-inside: avoid;
+        }
+        
+        .stat-card.primary {
+            border-top: 4px solid var(--primary-blue);
+        }
+        
+        .stat-card.success {
+            border-top: 4px solid var(--success-green);
+        }
+        
+        .stat-card.warning {
+            border-top: 4px solid var(--warning-orange);
+        }
+        
+        .stat-card.danger {
+            border-top: 4px solid var(--danger-red);
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--dark-blue);
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        
+        /* Tables */
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .section-header {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px 6px 0 0;
+            margin-bottom: 0;
+        }
+        
+        .section-header h2 {
+            font-size: 16px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-header .badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            float: right;
+        }
+        
+        .table-container {
+            border: 1px solid var(--border-gray);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            overflow: hidden;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+        
+        .data-table th {
+            background-color: var(--light-gray);
+            color: var(--dark-blue);
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 12px 8px;
+            border-bottom: 2px solid var(--border-gray);
+            text-align: left;
+            font-size: 9px;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border-gray);
+            vertical-align: middle;
+        }
+        
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .data-table tbody tr.low-stock {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        
+        .data-table tbody tr.out-of-stock {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+        
+        /* Status Indicators */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 70px;
+        }
+        
+        .status-good {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-green);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        
+        .status-low {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--warning-orange);
+            border: 1px solid rgba(255, 193, 7, 0.2);
+        }
+        
+        .status-out {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-red);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        
+        .category-badge {
+            background-color: rgba(0, 102, 204, 0.1);
+            color: var(--primary-blue);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            border: 1px solid rgba(0, 102, 204, 0.2);
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 80px;
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+            display: inline-block;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .progress-good {
+            background-color: var(--success-green);
+        }
+        
+        .progress-low {
+            background-color: var(--warning-orange);
+        }
+        
+        .progress-critical {
+            background-color: var(--danger-red);
+        }
+        
+        /* Category Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            padding: 15px;
+        }
+        
+        .category-item {
+            border: 1px solid var(--border-gray);
+            border-radius: 6px;
+            padding: 12px;
+            background-color: var(--light-gray);
+        }
+        
+        .category-title {
+            color: var(--dark-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        .category-stats {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+        
+        .category-stats span {
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        /* Footer */
+        .pdf-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-gray);
+            text-align: center;
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+        
+        .company-info {
+            margin-bottom: 10px;
+        }
+        
+        .print-info {
+            font-style: italic;
+        }
+        
+        /* Page Break Control */
+        .page-break {
+            page-break-before: always;
+        }
+        
+        /* Utility Classes */
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-success {
+            color: var(--success-green);
+        }
+        
+        .text-danger {
+            color: var(--danger-red);
+        }
+        
+        .text-warning {
+            color: var(--warning-orange);
+        }
+        
+        .text-primary {
+            color: var(--primary-blue);
+        }
+        
+        .mb-3 {
+            margin-bottom: 15px;
+        }
+        
+        .mt-3 {
+            margin-top: 15px;
+        }
+        
+        .p-3 {
+            padding: 15px;
+        }
+        
+        /* Print-specific styles */
+        @media print {
+            body {
+                padding: 0;
+                font-size: 10px;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .data-table {
+                font-size: 9px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+            }
+        }
+        
+        /* Hide print button in PDF */
+        .print-button {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Button (hidden in final PDF) -->
+    <button class="print-button no-print" onclick="window.print()" style="position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #0066CC; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 1000;">
+        Print/Save as PDF
+    </button>
+    
+    <!-- Header Section -->
+    <div class="pdf-header">
+        <h1>TEXTILE BAZAR</h1>
+        <div class="subtitle">Inventory Analysis Report</div>
+        <div class="meta-info">
+            <span>Generated on: {{ current_date }}</span>
+            <span>Report ID: INV-{{ current_date.replace('-', '') }}-{{ report_id }}</span>
+            <span>Page: <span id="page-number">1</span> of <span id="page-total">1</span></span>
+        </div>
+    </div>
+    
+    <!-- Summary Statistics -->
+    <div class="section">
+        <div class="section-header">
+            <h2>📊 Summary Statistics</h2>
+            <span class="badge">Snapshot</span>
+        </div>
+        <div class="table-container p-3">
+            <div class="stats-container">
+                <div class="stat-card primary">
+                    <div class="stat-value">{{ stats.total_items or 0 }}</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                
+                <div class="stat-card success">
+                    <div class="stat-value">{{ stats.total_stock or 0 }}</div>
+                    <div class="stat-label">Total Stock Units</div>
+                </div>
+                
+                <div class="stat-card warning">
+                    <div class="stat-value">{{ stats.low_stock_count or 0 }}</div>
+                    <div class="stat-label">Low Stock Items</div>
+                </div>
+                
+                <div class="stat-card danger">
+                    <div class="stat-value">{{ format_rupees(stats.total_inventory_value or 0) }}</div>
+                    <div class="stat-label">Inventory Value</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Summary -->
+    <div class="section">
+        <div class="section-header">
+            <h2>💰 Financial Overview</h2>
+            <span class="badge">Monetary</span>
+        </div>
+        <div class="table-container p-3">
+            <div class="stats-container">
+                <div class="stat-card primary">
+                    <div class="stat-value">{{ format_rupees(stats.total_potential_value or 0) }}</div>
+                    <div class="stat-label">Potential Sales</div>
+                </div>
+                
+                <div class="stat-card success">
+                    <div class="stat-value">{{ stats.total_items_sold or 0 }}</div>
+                    <div class="stat-label">Total Sold</div>
+                </div>
+                
+                <div class="stat-card warning">
+                    <div class="stat-value">{{ format_rupees(stats.total_sales_value or 0) }}</div>
+                    <div class="stat-label">Sales Revenue</div>
+                </div>
+                
+                <div class="stat-card danger">
+                    <div class="stat-value">
+                        {% if stats.total_potential_value and stats.total_inventory_value and stats.total_inventory_value > 0 %}
+                            {{ (((stats.total_potential_value - stats.total_inventory_value) / stats.total_inventory_value) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">Avg. Margin</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Inventory -->
+    <div class="section">
+        <div class="section-header">
+            <h2>📋 Detailed Inventory</h2>
+            <span class="badge">{{ items_with_sales|length }} Items</span>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Current Stock</th>
+                        <th>Min Stock</th>
+                        <th>Status</th>
+                        <th>Cost Price</th>
+                        <th>Selling Price</th>
+                        <th>Total Sold</th>
+                        <th>Revenue</th>
+                        <th>Stock %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items_with_sales %}
+                    <tr class="{% if item.current_stock <= 0 %}out-of-stock{% elif item.current_stock <= item.minimum_stock %}low-stock{% endif %}">
+                        <td class="text-center">{{ loop.index }}</td>
+                        <td><strong>{{ item.item_code }}</strong></td>
+                        <td>{{ item.item_name|truncate(20) }}</td>
+                        <td><span class="category-badge">{{ item.category }}</span></td>
+                        <td class="text-center">{{ item.current_stock }}</td>
+                        <td class="text-center">{{ item.minimum_stock }}</td>
+                        <td>
+                            {% if item.current_stock <= 0 %}
+                                <span class="status-badge status-out">Out</span>
+                            {% elif item.current_stock <= item.minimum_stock %}
+                                <span class="status-badge status-low">Low</span>
+                            {% else %}
+                                <span class="status-badge status-good">Good</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">{{ format_rupees(item.cost_price) }}</td>
+                        <td class="text-right text-success">{{ format_rupees(item.selling_price) }}</td>
+                        <td class="text-center">{{ item.total_sold_quantity or 0 }}</td>
+                        <td class="text-right text-primary">
+                            {% if item.total_sales_revenue %}
+                                {{ format_rupees(item.total_sales_revenue) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set max_stock = [item.current_stock + item.minimum_stock, 50]|max %}
+                            {% set progress_percent = (item.current_stock / max_stock * 100)|round if max_stock > 0 else 0 %}
+                            <div class="progress-container">
+                                <div class="progress-bar 
+                                    {% if item.current_stock <= 0 %}progress-critical
+                                    {% elif item.current_stock <= item.minimum_stock %}progress-low
+                                    {% else %}progress-good{% endif %}"
+                                    style="width: {{ progress_percent }}%">
+                                </div>
+                            </div>
+                            <span style="font-size: 8px;">{{ progress_percent }}%</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="12" class="text-center p-3">
+                            <em>No inventory items found</em>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Category Breakdown -->
+    <div class="section">
+        <div class="section-header">
+            <h2>🏷️ Category Analysis</h2>
+            <span class="badge">{{ category_summary|length }} Categories</span>
+        </div>
+        <div class="category-grid">
+            {% for category in category_summary %}
+            <div class="category-item">
+                <div class="category-title">
+                    <span>{{ category.category }}</span>
+                    <span class="badge" style="background: #0066CC; color: white; padding: 2px 6px; border-radius: 10px; font-size: 8px;">
+                        {{ category.item_count }}
+                    </span>
+                </div>
+                <div class="category-stats">
+                    <span>📦 Stock: {{ category.total_stock }} units</span>
+                    <span>💰 Value: {{ format_rupees(category.inventory_value) }}</span>
+                    <span>📈 Sold: {{ category.total_sold }} units</span>
+                    <span>🎯 Potential: {{ format_rupees(category.potential_value) }}</span>
+                    <span class="mt-3">
+                        {% set total_items = category.total_stock + category.total_sold %}
+                        📊 Sell-through: 
+                        {% if total_items > 0 %}
+                            {{ ((category.total_sold / total_items) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% else %}
+            <div class="category-item text-center">
+                <em>No categories found</em>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Recent Stock Movements -->
+    {% if recent_movements %}
+    <div class="section">
+        <div class="section-header">
+            <h2>🔄 Recent Stock Movements</h2>
+            <span class="badge">Last 10 Activities</span>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Type</th>
+                        <th>Qty</th>
+                        <th>Prev</th>
+                        <th>New</th>
+                        <th>By</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in recent_movements %}
+                    <tr>
+                        <td>
+                            <small>
+                                {% if movement.created_date %}
+                                    {{ movement.created_date[:10] if movement.created_date|length > 10 else movement.created_date }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <strong>{{ movement.item_name|truncate(15) }}</strong><br>
+                            <small>{{ movement.item_code or 'N/A' }}</small>
+                        </td>
+                        <td>
+                            {% if movement.transaction_type == 'sale' %}
+                                <span style="color: #dc3545; font-weight: bold;">SALE</span>
+                            {% elif movement.transaction_type == 'purchase' %}
+                                <span style="color: #28a745; font-weight: bold;">PURCHASE</span>
+                            {% elif movement.transaction_type == 'return' %}
+                                <span style="color: #ffc107; font-weight: bold;">RETURN</span>
+                            {% else %}
+                                <span>{{ movement.transaction_type or 'N/A' }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if movement.transaction_type == 'sale' %}
+                                <span style="color: #dc3545;">-{{ movement.quantity }}</span>
+                            {% else %}
+                                <span style="color: #28a745;">+{{ movement.quantity }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ movement.previous_stock or 0 }}</td>
+                        <td class="text-center"><strong>{{ movement.new_stock or 0 }}</strong></td>
+                        <td><small>{{ movement.created_by or 'System' }}</small></td>
+                        <td><small>{{ movement.notes|truncate(20) if movement.notes else '-' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Footer -->
+    <div class="pdf-footer">
+        <div class="company-info">
+            <strong>Textile Bazar - Inventory Management System</strong><br>
+            📍 Your Trusted Clothing Store | 📞 Customer Care: +91 9876543210<br>
+            📧 info@textilebazar.com | ⏰ Store Hours: 9:00 AM - 9:00 PM (Mon-Sat)
+        </div>
+        <div class="print-info">
+            This report was generated automatically on {{ current_date }}<br>
+            All amounts are in Indian Rupees (INR ₹)
+        </div>
+        <div style="margin-top: 10px; font-size: 8px; color: #999;">
+            Page <span id="page-footer-number">1</span> of <span id="page-footer-total">1</span> | 
+            Report ID: INV-{{ current_date.replace('-', '') }}-{{ report_id }}
+        </div>
+    </div>
+    
+    <script>
+        // Update page numbers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate a random report ID if not provided
+            const reportId = Math.floor(1000 + Math.random() * 9000);
+            document.querySelectorAll('.report-id-placeholder').forEach(el => {
+                el.textContent = reportId;
+            });
+            
+            // Update page numbers
+            const totalPages = Math.ceil(document.body.scrollHeight / window.innerHeight);
+            document.getElementById('page-total').textContent = totalPages;
+            document.getElementById('page-footer-total').textContent = totalPages;
+            
+            // Auto-print when loaded (for PDF generation)
+            setTimeout(() => {
+                window.print();
+            }, 1000);
+        });
+        
+        // Update page number on print
+        window.addEventListener('beforeprint', () => {
+            const currentPage = 1; // This would need more complex logic for multi-page
+            document.getElementById('page-number').textContent = currentPage;
+            document.getElementById('page-footer-number').textContent = currentPage;
+        });
+    </script>
+</body>
+</html>

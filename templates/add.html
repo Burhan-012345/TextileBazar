@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}{% if edit_mode %}Edit{% else %}Add{% endif %} Sale{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-{% if edit_mode %}edit{% else %}plus-circle{% endif %} me-2"></i>
+                    {% if edit_mode %}Edit{% else %}Add New{% endif %} Sale Entry
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('edit_entry', id=item.id) if edit_mode else url_for('add_entry') }}">
+                    <div class="row">
+                        <!-- Date Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">
+                                <i class="fas fa-calendar me-1 text-primary"></i>
+                                Sale Date
+                            </label>
+                            <input type="date"
+                                   class="form-control"
+                                   id="date"
+                                   name="date"
+                                   value="{{ item.date if edit_mode else default_date }}"
+                                   required>
+                            <div class="form-text">Select the sale date</div>
+                        </div>
+
+                        <!-- Customer Name Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="customer_name" class="form-label">
+                                <i class="fas fa-user me-1 text-primary"></i>
+                                Customer Name
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="customer_name"
+                                   name="customer_name"
+                                   value="{{ item.customer_name if edit_mode else '' }}"
+                                   placeholder="Enter customer full name"
+                                   required>
+                            <div class="form-text">Customer's full name</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Phone Number Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="phone_number" class="form-label">
+                                <i class="fas fa-phone me-1 text-primary"></i>
+                                Phone Number
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">+91</span>
+                                <input type="tel"
+                                       class="form-control"
+                                       id="phone_number"
+                                       name="phone_number"
+                                       value="{{ item.phone_number if edit_mode else '' }}"
+                                       pattern="[6-9]\d{9}"
+                                       maxlength="10"
+                                       placeholder="9876543210"
+                                       required>
+                            </div>
+                            <div class="form-text">10-digit Indian mobile number</div>
+                        </div>
+
+                        <!-- Item Name Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="item_name" class="form-label">
+                                <i class="fas fa-tshirt me-1 text-primary"></i>
+                                Clothing Item
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="item_name"
+                                   name="item_name"
+                                   value="{{ item.item_name if edit_mode else '' }}"
+                                   placeholder="e.g., Cotton Shirt, Silk Saree, Denim Jeans"
+                                   required>
+                            <div class="form-text">Name of the clothing item</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Price Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">
+                                <i class="fas fa-rupee-sign me-1 text-primary"></i>
+                                Price per Piece
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number"
+                                       class="form-control"
+                                       id="price"
+                                       name="price"
+                                       value="{{ item.price if edit_mode else '' }}"
+                                       step="0.01"
+                                       min="0.01"
+                                       placeholder="0.00"
+                                       required>
+                            </div>
+                            <div class="form-text">Price for one unit</div>
+                        </div>
+
+                        <!-- Quantity Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">
+                                <i class="fas fa-hashtag me-1 text-primary"></i>
+                                Quantity
+                            </label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="quantity"
+                                   name="quantity"
+                                   value="{{ item.quantity if edit_mode else '' }}"
+                                   min="1"
+                                   placeholder="1"
+                                   required>
+                            <div class="form-text">Number of pieces</div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Card -->
+                    <div class="card mb-4 border-primary shadow-sm">
+                        <div class="card-header bg-light text-primary">
+                            <i class="fas fa-calculator me-1"></i>
+                            Total Preview
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <p class="mb-1 text-muted">Price per Piece</p>
+                                    <h4 id="previewPrice" class="text-primary">₹0.00</h4>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1 text-muted">Quantity</p>
+                                    <h4 id="previewQuantity" class="text-warning">0</h4>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1 text-muted">Total Amount</p>
+                                    <h4 id="previewTotal" class="text-success">₹0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {% if edit_mode %}Update{% else %}Save{% endif %} Sale
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for live calculation preview -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const priceInput = document.getElementById('price');
+        const quantityInput = document.getElementById('quantity');
+        const previewPrice = document.getElementById('previewPrice');
+        const previewQuantity = document.getElementById('previewQuantity');
+        const previewTotal = document.getElementById('previewTotal');
+
+        function formatCurrency(amount) {
+            return '₹' + parseFloat(amount).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function updatePreview() {
+            const price = parseFloat(priceInput.value) || 0;
+            const quantity = parseInt(quantityInput.value) || 0;
+            const total = price * quantity;
+
+            previewPrice.textContent = formatCurrency(price);
+            previewQuantity.textContent = quantity.toLocaleString('en-IN');
+            previewTotal.textContent = formatCurrency(total);
+        }
+
+        priceInput.addEventListener('input', updatePreview);
+        quantityInput.addEventListener('input', updatePreview);
+
+        // Initialize preview with current values
+        updatePreview();
+
+        // Format phone number
+        const phoneInput = document.getElementById('phone_number');
+        phoneInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    });
+</script>
+{% endblock %}
